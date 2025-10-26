@@ -84,7 +84,7 @@ export function ProductDetail({
   }, {} as Record<number, number>);
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container">
       {/* Breadcrumb Navigation */}
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
