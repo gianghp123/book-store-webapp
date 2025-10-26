@@ -281,7 +281,7 @@ export function ProductCatalogue() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container">
       <div className="flex gap-6">
         {/* Desktop Filter Panel */}
         <div className="hidden lg:block flex-shrink-0">

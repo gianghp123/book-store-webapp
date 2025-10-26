@@ -2,6 +2,7 @@ import { Search, ShoppingCart, User, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
+import Link from "next/link";
 
 interface HeaderProps {
   cartItemsCount?: number;
@@ -39,30 +40,30 @@ export function MainHeader({
 
         {/* Navigation - Hidden on mobile */}
         <nav className="hidden md:flex items-center gap-6">
-          <a
-            href="#"
+          <Link
+            href="/"
             className="hover:text-primary transition-colors"
           >
             Home
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            href="/categories"
             className="hover:text-primary transition-colors"
           >
             Categories
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            href="/deals"
             className="hover:text-primary transition-colors"
           >
             Deals
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            href="/about"
             className="hover:text-primary transition-colors"
           >
             About
-          </a>
+          </Link>
         </nav>
 
         {/* Search Bar - Hidden on small screens */}
@@ -83,21 +84,23 @@ export function MainHeader({
           >
             <Search className="h-5 w-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="relative"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cartItemsCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {cartItemsCount}
-              </Badge>
-            )}
-          </Button>
+          <Link href="/cart" className="cursor-pointer">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="relative"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cartItemsCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                >
+                  {cartItemsCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
           <Button variant="ghost" size="sm">
             <User className="h-5 w-5" />
           </Button>

@@ -1,6 +1,6 @@
 // Category interface for responses
 export interface Category {
-  id: string; // UUID
+  id?: string; // UUID
   name: string;
 }
 
