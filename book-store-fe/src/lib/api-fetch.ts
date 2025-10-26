@@ -1,11 +1,12 @@
 import { getAuthTokenServer } from "./cookie/cookie-server";
 import { ServerResponseModel } from "./typedefs/server-response";
+import { keysToCamel, keysToSnake } from "./utils";
 
 type ApiFetchOptions = {
   baseUrl?: string;
   withCredentials?: boolean;
-  withUpload?: boolean;
-  isBlob?: boolean;
+  transformCase?: boolean;
+  query?: Record<string, any>; // 👈 Add query parameter support
 } & RequestInit;
 
 export async function apiFetch<T = any>(
@@ -15,8 +16,9 @@ export async function apiFetch<T = any>(
   try {
     const {
       withCredentials = false,
-      withUpload = false,
-      baseUrl = process.env.NEXT_PUBLIC_API_ENDPOINT,
+      transformCase = true,
+      baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '',
+      query,
       ...fetchOptions
     } = options || {};
 
@@ -25,6 +27,7 @@ export async function apiFetch<T = any>(
       apikey: process.env.API_KEY || "",
     };
 
+    // 🔐 Attach token if required
     if (withCredentials) {
       const accessToken = await getAuthTokenServer();
       if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
@@ -36,10 +39,32 @@ export async function apiFetch<T = any>(
         };
     }
 
-    if (!withUpload) headers["Content-Type"] = "application/json";
-    if (options?.isBlob) headers["Accept"] = "application/octet-stream";
+    headers["Content-Type"] = "application/json";
+    headers["Accept"] = "application/json";
 
-    const fullUrl = `${baseUrl}${url}`;
+    // 🧩 Transform query to snake_case
+    let queryString = "";
+    if (query && Object.keys(query).length > 0) {
+      const snakeQuery = transformCase ? keysToSnake(query) : query;
+      const searchParams = new URLSearchParams();
+      Object.entries(snakeQuery).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
+      queryString = `?${searchParams.toString()}`;
+    }
+
+    const fullUrl = `${baseUrl}${url}${queryString}`;
+
+    // 🧠 Transform outgoing body to snake_case
+    if (fetchOptions.body && transformCase) {
+      try {
+        const parsed = JSON.parse(fetchOptions.body as string);
+        fetchOptions.body = JSON.stringify(keysToSnake(parsed));
+      } catch (_) {}
+    }
+
     const response = await fetch(fullUrl, { ...fetchOptions, headers });
 
     if (!response.ok) {
@@ -51,20 +76,15 @@ export async function apiFetch<T = any>(
       return { success: false, statusCode: response.status, message };
     }
 
-    if (options?.isBlob) {
-      return {
-        success: true,
-        statusCode: response.status,
-        data: (await response.blob()) as T,
-      };
-    }
-
-    // Default: JSON
+    // ✅ Transform response to camelCase
     const data = await response.json();
+    const transformed = transformCase ? keysToCamel(data) : data;
+
     return {
       success: true,
       statusCode: response.status,
-      data: data.data ? (data.data as T) : (data as T),
+      data: transformed.data ? (transformed.data as T) : (transformed as T),
+      pagination: transformed.pagination,
     };
   } catch (error: any) {
     console.error(error);

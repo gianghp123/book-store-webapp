@@ -4,10 +4,13 @@ import { AutoExpose } from 'src/core/decorators/auto-expose.decorator';
 import { Type } from 'class-transformer';
 import { AuthorResponseDto } from 'src/modules/author/dto/author-response.dto';
 import { IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { capitalizeFirstLetter } from 'src/core/utils/string.util';
 
 @AutoExpose()
 export class ProductResponseDto extends BaseResponseDto {
   id: string;
+  @Transform(({ value }) => capitalizeFirstLetter(value))
   title: string;
   description?: string;
   price: number;

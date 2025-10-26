@@ -145,10 +145,12 @@ export class OrderService {
 
     const paginatedOrdersDto = new PaginatedOrdersDto();
     paginatedOrdersDto.data = orderResponseDtos;
-    paginatedOrdersDto.total = total;
-    paginatedOrdersDto.page = page;
-    paginatedOrdersDto.limit = limit;
-    paginatedOrdersDto.totalPages = Math.ceil(total / limit);
+    paginatedOrdersDto.pagination = {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
 
     return paginatedOrdersDto;
   }
@@ -201,10 +203,12 @@ export class OrderService {
 
     const paginatedOrdersDto = new PaginatedOrdersDto();
     paginatedOrdersDto.data = orderResponseDtos;
-    paginatedOrdersDto.total = total;
-    paginatedOrdersDto.page = page;
-    paginatedOrdersDto.limit = limit;
-    paginatedOrdersDto.totalPages = Math.ceil(total / limit);
+    paginatedOrdersDto.pagination = {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
 
     return paginatedOrdersDto;
   }

@@ -34,11 +34,14 @@ export class UserService {
     const data = users.map(user => UserResponseDto.fromEntity(user));
 
     return {
+      
       data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 

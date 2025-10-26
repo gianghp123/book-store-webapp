@@ -38,7 +38,7 @@ export class ProductService {
 
     const queryBuilder = this.productRepository.createQueryBuilder('product')
       .leftJoinAndSelect('product.book', 'book')
-      .leftJoinAndSelect('book.categories', 'categories')
+      .leftJoin('book.categories', 'categories')
       .where(whereCondition);
 
     if (minPrice !== undefined) {
@@ -77,11 +77,14 @@ export class ProductService {
     });
 
     return {
+      
       data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 

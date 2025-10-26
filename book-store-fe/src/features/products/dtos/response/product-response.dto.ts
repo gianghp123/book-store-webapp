@@ -23,6 +23,7 @@ export interface Product {
   updatedAt: string; // date
   categories: ProductCategory[];
   authors: ProductAuthor[];
+  reviews: ProductReview[];
 }
 
 export interface ProductReview {

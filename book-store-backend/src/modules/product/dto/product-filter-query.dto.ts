@@ -1,13 +1,18 @@
-import { IsOptional, IsString, IsNumber, IsArray, IsUUID, IsEnum } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { PaginationQueryDto } from 'src/core/dto/pagination-query.dto';
-import { ApiPropertyOptional } from '@nestjs/swagger'; 
-import { SortOrder } from 'src/core/enums/sort.enum';
 
 export class ProductFilterQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ 
-      description: 'search by title',
-      type: String, 
+  @ApiPropertyOptional({
+    description: 'search by title',
+    type: String,
   })
   @IsOptional()
   @IsString()
@@ -39,21 +44,4 @@ export class ProductFilterQueryDto extends PaginationQueryDto {
   @Transform(({ value }) => parseFloat(value))
   @IsNumber()
   maxPrice?: number;
-
-  @ApiPropertyOptional({
-    description: 'sort by field',
-    type: String,
-  })
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @ApiPropertyOptional({
-    description: 'sort order',
-    type: String,
-  })
-  @IsOptional()
-  @IsString()
-  @IsEnum(SortOrder)
-  sortOrder?: SortOrder;
 }

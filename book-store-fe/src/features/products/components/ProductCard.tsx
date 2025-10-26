@@ -5,19 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ImageWithFallback } from "@/components/ImageWithFallBack";
 import { useState } from "react";
+import { Product } from "../dtos/response/product-response.dto";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  isNew?: boolean;
-  isSale?: boolean;
-  salePercentage?: number;
-}
 
 interface ProductCardProps {
   product: Product;
@@ -29,7 +18,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
 
   return (
     <Card 
-      className={`group relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer ${isHovered ? 'scale-[1.02]' : ''}`}
+      className={`h-full group relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer ${isHovered ? 'scale-[1.02]' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
@@ -39,14 +28,14 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         <div className="relative aspect-[3/4] overflow-hidden">
           <ImageWithFallback
             src={product.image}
-            alt={product.name}
+            alt={product.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
 
         {/* Product Info */}
         <div className="p-4">
-          <h3 className="font-medium mb-2 line-clamp-2">{product.name}</h3>
+          <h3 className="font-medium mb-2 line-clamp-2">{product.title}</h3>
           
           {/* Rating */}
           <div className="flex items-center gap-1 mb-2">
@@ -63,18 +52,13 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
               ))}
             </div>
             <span className="text-sm text-muted-foreground">
-              ({product.reviewCount})
+              ({product.ratingCount})
             </span>
           </div>
 
           {/* Price */}
           <div className="flex items-center gap-2">
             <span className="font-bold">${product.price}</span>
-            {product.originalPrice && (
-              <span className="text-sm text-muted-foreground line-through">
-                ${product.originalPrice}
-              </span>
-            )}
           </div>
         </div>
       </CardContent>

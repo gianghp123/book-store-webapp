@@ -1,21 +1,6 @@
 "use client";
-import { useState } from "react";
-import {
-  Star,
-  Heart,
-  ShoppingCart,
-  Share2,
-  ChevronLeft,
-  Minus,
-  Plus,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageWithFallback } from "@/components/ImageWithFallBack";
-import { Product, ProductReview } from "../dtos/response/product-response.dto";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,36 +9,25 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ChevronLeft, Heart, Share2, ShoppingCart, Star } from "lucide-react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
+import { Product, ProductReview } from "../dtos/response/product-response.dto";
 
 interface ProductDetailProps {
   product: Product;
   reviews: ProductReview[];
-  relatedProducts?: Product[];
 }
 
-export function ProductDetail({
-  product,
-  reviews,
-  relatedProducts = [],
-}: ProductDetailProps) {
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-
+export function ProductDetail({ product, reviews }: ProductDetailProps) {
   const image =
     product.image ||
     "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&h=800&fit=crop";
 
   const handleAddToCart = () => {
-    toast.success(
-      `Added ${quantity} ${quantity > 1 ? "items" : "item"} to cart!`
-    );
-  };
-
-  const handleWishlistToggle = () => {
-    setIsWishlisted(!isWishlisted);
-    toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
+    toast.success(`Added ${product.title} to cart!`);
   };
 
   const handleShare = () => {
@@ -73,11 +47,6 @@ export function ProductDetail({
     window.history.back();
   };
 
-  const onProductClick = (productId: string) => {
-    console.log(`Product clicked: ${productId}`);
-  };
-
-  const averageRating = product.rating;
   const ratingDistribution = reviews.reduce((acc, review) => {
     acc[review.rating] = (acc[review.rating] || 0) + 1;
     return acc;
@@ -140,7 +109,8 @@ export function ProductDetail({
           <h1 className="mb-2 text-2xl font-bold">{product.title}</h1>
           {product.authors.length > 0 && (
             <p className="text-muted-foreground mb-4">
-              by {product.authors.map((author) => author.name).join(", ")}
+              by{" "}
+              {product.authors.map((author) => author.name).join(", ")}
             </p>
           )}
 
@@ -152,14 +122,14 @@ export function ProductDetail({
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.floor(averageRating)
+                      i < Math.floor(product.rating)
                         ? "text-yellow-400 fill-current"
                         : "text-gray-300"
                     }`}
                   />
                 ))}
               </div>
-              <span className="ml-2">{averageRating.toFixed(1)}</span>
+              <span className="ml-2">{product.rating}</span>
             </div>
             <Separator orientation="vertical" className="h-4" />
             <a
@@ -172,35 +142,10 @@ export function ProductDetail({
 
           {/* Price */}
           <div className="flex items-baseline gap-3 mb-6">
-            <span className="text-3xl">${product.price.toFixed(2)}</span>
+            <span className="text-3xl">${product.price}</span>
           </div>
 
           <Separator className="mb-6" />
-
-          {/* Quantity Selector */}
-          <div className="flex items-center gap-4 mb-6">
-            <label>Quantity:</label>
-            <div className="flex items-center border rounded-md">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="px-4 py-2 min-w-[3rem] text-center">
-                {quantity}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -208,15 +153,8 @@ export function ProductDetail({
               <ShoppingCart className="h-5 w-5 mr-2" />
               Add to Cart
             </Button>
-            <Button
-              variant={isWishlisted ? "default" : "outline"}
-              size="lg"
-              onClick={handleWishlistToggle}
-              className={isWishlisted ? "bg-red-500 hover:bg-red-600" : ""}
-            >
-              <Heart
-                className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`}
-              />
+            <Button variant="outline" size="lg">
+              <Heart className="h-5 w-5" />
             </Button>
             <Button variant="outline" size="lg" onClick={handleShare}>
               <Share2 className="h-5 w-5" />
@@ -246,13 +184,13 @@ export function ProductDetail({
       {/* Rating Summary */}
       <div className="grid md:grid-cols-2 gap-8 mb-8">
         <div className="flex flex-col items-center justify-center p-6 bg-muted/50 rounded-lg">
-          <div className="text-5xl mb-2">{averageRating.toFixed(1)}</div>
+          <div className="text-5xl mb-2">{product.rating}</div>
           <div className="flex mb-2">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
                 className={`h-6 w-6 ${
-                  i < Math.floor(averageRating)
+                  i < Math.floor(product.rating)
                     ? "text-yellow-400 fill-current"
                     : "text-gray-300"
                 }`}
@@ -290,6 +228,12 @@ export function ProductDetail({
 
       {/* Reviews List */}
       <div className="space-y-6">
+        <h2 className="text-2xl font-bold mb-4">Reviews</h2>
+        {reviews.length === 0 && (
+          <p className="text-muted-foreground text-center min-h-[100px]">
+            No review comments yet.
+          </p>
+        )}
         {reviews.map((review, index) => (
           <div key={index} className="border-b pb-6 last:border-b-0">
             <div className="flex items-start justify-between mb-2">
@@ -320,37 +264,6 @@ export function ProductDetail({
           </div>
         ))}
       </div>
-      {/* Related Products */}
-      {relatedProducts.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <h2 className="mb-6">You May Also Like</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {relatedProducts.map((relatedProduct) => (
-              <div
-                key={relatedProduct.id}
-                className="group cursor-pointer"
-                onClick={() => onProductClick?.(relatedProduct.id)}
-              >
-                <div className="aspect-[3/4] mb-2 overflow-hidden rounded-lg bg-muted">
-                  <ImageWithFallback
-                    src={relatedProduct.image}
-                    alt={relatedProduct.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <h4 className="line-clamp-2 mb-1">{relatedProduct.title}</h4>
-                <p className="text-muted-foreground">
-                  ${relatedProduct.price.toFixed(2)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 }

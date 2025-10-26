@@ -5,14 +5,15 @@ import 'es6-shim';
 import 'reflect-metadata';
 import { AppModule } from './app.module';
 import { SnakeCaseInterceptor } from './core/interceptors/snake_case.interceptor';
+import { CamelCaseTransformPipe } from './core/pipes/camel-case-transform.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalInterceptors(new SnakeCaseInterceptor());
-  
+
   app.useGlobalPipes(
-    new ValidationPipe({
+    new CamelCaseTransformPipe({
       transform: true,
     }),
   );
