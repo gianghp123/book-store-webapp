@@ -8,11 +8,20 @@ import { Transform } from 'class-transformer';
 import { capitalizeFirstLetter } from 'src/core/utils/string.util';
 
 @AutoExpose()
+export class BookResponseDto {
+  isbn?: string;
+  publisher?: string;
+  pagesCount?: number;
+}
+
+@AutoExpose()
 export class ProductResponseDto extends BaseResponseDto {
   id: string;
   @Transform(({ value }) => capitalizeFirstLetter(value))
   title: string;
   description?: string;
+  @Type(() => BookResponseDto)
+  book: BookResponseDto;
   price: number;
   rating: number;
   ratingCount: number;
@@ -25,3 +34,4 @@ export class ProductResponseDto extends BaseResponseDto {
   @Type(() => AuthorResponseDto)
   authors?: AuthorResponseDto[];
 }
+

@@ -1,5 +1,4 @@
 "use client";
-import { resource } from "@/lib/routes/route-resources";
 import { authProvider } from "@/provider/auth-provider";
 import { dataProvider } from "@/provider/data-provider";
 import { queryClient } from "@/provider/react-query-provider";
@@ -30,11 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryClientProvider client={queryClient}>
-          <Refine
-            dataProvider={dataProvider()}
-            authProvider={authProvider}
-            resources={resource}
-          >
+          <Refine dataProvider={dataProvider()} authProvider={authProvider}>
             {children}
           </Refine>
         </QueryClientProvider>

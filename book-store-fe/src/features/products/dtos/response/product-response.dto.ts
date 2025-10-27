@@ -6,6 +6,12 @@ export interface ProductAuthor {
   name: string;
 }
 
+export interface ProductBook {
+  isbn?: string;
+  publisher?: string;
+  pagesCount?: number;
+}
+
 // Product response interface
 export interface Product {
   id: string; // UUID
@@ -15,6 +21,7 @@ export interface Product {
   price: number;
   rating: number;
   ratingCount: number;
+  book?: ProductBook;
   createdAt: string; // date
   updatedAt: string; // date
   categories: ProductCategory[];

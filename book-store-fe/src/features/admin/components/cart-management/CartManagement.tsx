@@ -27,7 +27,7 @@ export function CartManagement() {
     setCurrentPage,
     currentPage,
   } = useTable<CartResponse, HttpError>({
-    resource: "admin/carts",
+    resource: "carts",
     pagination: {
       pageSize: 10,
     },
