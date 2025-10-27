@@ -24,7 +24,7 @@ export function OrderManagement() {
     currentPage,
     setCurrentPage,
   } = useTable<Order, HttpError>({
-    resource: "orders/admin",
+    resource: "admin/orders",
     // sorters: [
     //   {
     //     field: "createdAt",

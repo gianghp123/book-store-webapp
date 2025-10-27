@@ -1,17 +1,33 @@
+// src/provider/public-data-provider.ts
 import { apiFetch } from "@/lib/api-fetch";
 import { DataProvider } from "@refinedev/core";
 
 export const dataProvider = (): DataProvider => ({
-  getOne: async ({ id, resource }) => {
+  getOne: async ({ id, resource, }) => {
     const { data } = await apiFetch(`/${resource}/${id}`);
       return {
           data,
       };
   },
 
-  create: async () => {
-      throw new Error("Not implemented");
+  // CẬP NHẬT PHƯƠNG THỨC NÀY (Bỏ "Not implemented")
+  create: async ({ resource, variables }) => {
+    // Gọi apiFetch với endpoint và dữ liệu
+    const { data, success, message } = await apiFetch(`/${resource}`, {
+      method: "POST",
+      body: JSON.stringify(variables),
+    });
+
+    if (!success) {
+      // Refine mong muốn nhận lỗi khi thất bại
+      throw new Error(message || "Tạo mới thất bại");
+    }
+
+    return {
+      data, // Trả về { data: { accessToken: "..." } }
+    };
   },
+
   update: async () => {
       throw new Error("Not implemented");
   },

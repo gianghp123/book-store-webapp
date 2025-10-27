@@ -1,27 +1,18 @@
 "use client";
 
-import {MainHeader} from "@/components/MainHeader";
-import {MainFooter} from "@/components/MainFooter";
-import { Toaster } from "@/components/ui/sonner";
-import { Refine } from "@refinedev/core";
-import { dataProvider } from "@/provider/data-provider";
-import { resource } from "@/lib/routes/route-resources";
+import { MainFooter } from "@/components/MainFooter";
+import { MainHeader } from "@/components/MainHeader";
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-h-screen bg-background">
       <MainHeader />
-      <Refine
-        dataProvider={dataProvider()}
-        resources={resource}
-      >
-     
-      <main className="container mx-auto px-4 py-6">
-        {children}
-      </main>
-       </Refine>
+      <main className="container mx-auto px-4 py-6">{children}</main>
       <MainFooter />
-      <Toaster />
     </div>
   );
 }

@@ -27,7 +27,7 @@ export function ProductManagement() {
     currentPage,
     setCurrentPage,
   } = useTable<Product>({
-    resource: "products",
+    resource: "admin/products",
     pagination: {
       pageSize: 10,
     },

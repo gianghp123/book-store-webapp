@@ -9,12 +9,13 @@ import { JwtAuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
-
+import { ProductModule } from '../product/product.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     forwardRef(() => UserModule),
     PassportModule,
+    ProductModule,
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,

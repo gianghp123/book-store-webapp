@@ -1,37 +1,38 @@
 "use client";
-import { useState } from "react";
-import { User } from "@/features/users/dtos/response/user-response.dto";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DataTable } from "@/components/reusable/data-table";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Edit, Trash2, Mail, Phone } from "lucide-react";
-import { toast } from "sonner";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { User } from "@/features/users/dtos/response/user-response.dto";
 import { HttpError, useTable } from "@refinedev/core";
+import { Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { userColumns } from "./columns";
-import { DataTable } from "@/components/reusable/data-table";
-
 
 export function UserManagement() {
-  const { result, tableQuery, currentPage, setCurrentPage, pageCount } = useTable<User, HttpError>({
-    resource: "users",
-    pagination: {
-      pageSize: 10,
-    },
-  });
+  const { result, tableQuery, currentPage, setCurrentPage, pageCount } =
+    useTable<User, HttpError>({
+      resource: 'admin/users',
+      pagination: {
+        pageSize: 10,
+      },
+    });
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -89,7 +90,9 @@ export function UserManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1>User Management</h1>
-          <p className="text-gray-600 mt-1">Manage your customers and administrators</p>
+          <p className="text-gray-600 mt-1">
+            Manage your customers and administrators
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -100,14 +103,18 @@ export function UserManagement() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
+              <DialogTitle>
+                {editingUser ? "Edit User" : "Add New User"}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label>Full Name</Label>
                 <Input
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -116,7 +123,9 @@ export function UserManagement() {
                 <Input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -125,13 +134,20 @@ export function UserManagement() {
                 <Input
                   type="tel"
                   value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phoneNumber: e.target.value })
+                  }
                   placeholder="+1-555-0100"
                 />
               </div>
               <div>
                 <Label>Role</Label>
-                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                <Select
+                  value={formData.role}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, role: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -146,7 +162,11 @@ export function UserManagement() {
                 <Button type="submit" className="flex-1">
                   {editingUser ? "Update" : "Add"} User
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancel
                 </Button>
               </div>
