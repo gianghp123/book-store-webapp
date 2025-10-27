@@ -1,13 +1,9 @@
 "use client";
 
-import { MainFooter } from "@/components/MainFooter";
-import { MainHeader } from "@/components/MainHeader";
+import {MainHeader} from "@/components/MainHeader";
+import {MainFooter} from "@/components/MainFooter";
 
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <MainHeader />
@@ -16,3 +12,4 @@ export default function MainLayout({
     </div>
   );
 }
+
