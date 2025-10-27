@@ -1,7 +1,7 @@
 // User interface for the response
 export interface UserResponse {
   id: string;
-  fullName: string;
+  full_name: string;
   email: string;
   phoneNumber?: string;
   role: string; // Role enum
@@ -11,7 +11,7 @@ export interface UserResponse {
 
 // Response for register and login
 export interface AuthResponse {
-  accessToken: string;
+  access_token: string;
   user: UserResponse;
 }
 
