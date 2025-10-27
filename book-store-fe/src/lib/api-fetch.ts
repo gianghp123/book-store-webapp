@@ -66,7 +66,6 @@ export async function apiFetch<T = any>(
     }
 
     const response = await fetch(fullUrl, { ...fetchOptions, headers });
-
     if (!response.ok) {
       let message = "Unknown error";
       try {

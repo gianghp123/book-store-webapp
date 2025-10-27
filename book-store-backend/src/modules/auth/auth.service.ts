@@ -42,7 +42,7 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
+  async register(registerDto: RegisterDto): Promise<UserResponseDto> {
     const { fullName, email, password, phoneNumber } = registerDto;
 
     // Check if user already exists
@@ -67,14 +67,8 @@ export class AuthService implements OnModuleInit {
 
     await this.userRepository.save(user);
 
-    // Generate JWT token
-    const payload = { sub: user.id, email: user.email, role: user.role };
-    const token = this.jwtService.sign(payload);
 
-    return {
-      accessToken: token,
-      user: UserResponseDto.fromEntity(user),
-    };
+    return UserResponseDto.fromEntity(user);
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {

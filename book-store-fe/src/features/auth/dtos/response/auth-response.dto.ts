@@ -1,17 +1,8 @@
-// User interface for the response
-export interface UserResponse {
-  id: string;
-  full_name: string;
-  email: string;
-  phoneNumber?: string;
-  role: string; // Role enum
-  createdAt: string; // date
-  updatedAt: string; // date
-}
+import { UserResponse } from "@/features/users/dtos/response/user-response.dto";
 
 // Response for register and login
 export interface AuthResponse {
-  access_token: string;
+  accessToken: string;
   user: UserResponse;
 }
 

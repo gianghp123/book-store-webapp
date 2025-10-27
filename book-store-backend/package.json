@@ -18,8 +18,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "copy:seeds": "xcopy src\\database\\seeds dist\\database\\seeds /E /I /Y",
+    "copy:seeds:win": "xcopy src\\database\\seeds dist\\database\\seeds /E /I /Y",
+    "copy:seeds": "cp -r src/database/seeds dist/database/seeds",
     "migration:run": "npm run build && npm run copy:seeds && typeorm migration:run -d dist/database/data-source.js",
+    "migration:run:win": "npm run build && npm run copy:seeds:win && typeorm migration:run -d dist/database/data-source.js",
     "migration:revert": "typeorm migration:revert -d dist/database/data-source.js",
     "migration:generate": "npm run build && typeorm migration:generate -d dist/database/data-source.js src/database/migrations/NewMigrationName"
   },

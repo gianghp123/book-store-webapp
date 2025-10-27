@@ -1,86 +1,93 @@
 // src/provider/auth-provider.ts
-import { AuthProvider } from "@refinedev/core";
-import { apiFetch } from "@/lib/api-fetch";
-import { setAuthToken, getAuthToken, removeAuthToken } from "@/lib/cookie/cookie";
-import { RegisterDto } from "@/features/auth/dtos/request/register.dto";
 import { LoginDto } from "@/features/auth/dtos/request/login.dto";
+import { RegisterDto } from "@/features/auth/dtos/request/register.dto";
 import { AuthResponse } from "@/features/auth/dtos/response/auth-response.dto";
+import { UserResponse } from "@/features/users/dtos/response/user-response.dto";
+import { apiFetch } from "@/lib/api-fetch";
+import {
+  getAuthTokenServer,
+  getUserServer,
+  removeAuthTokenServer,
+  setAuthTokenServer,
+} from "@/lib/cookie/cookie-server";
+import { AuthProvider } from "@refinedev/core";
 
 export const authProvider: AuthProvider = {
   // THÊM PHƯƠNG THỨC REGISTER NÀY VÀO
   register: async (params: RegisterDto) => {
-    try {
-      const { data, success, message } = await apiFetch<AuthResponse>("/auth/register", {
-        method: "POST",
-        body: JSON.stringify(params),
-      });
+      const { data, success, message } = await apiFetch<UserResponse>(
+        "/auth/register",
+        {
+          method: "POST",
+          body: JSON.stringify(params),
+        }
+      );
 
-      // Kiểm tra lỗi hoặc token (phải là snake_case)
-      if (!success || !data?.access_token) {
-        throw new Error(message || "Đăng ký thất bại, không nhận được token.");
+      if (!success) {
+        throw new Error(message || "Register failed");
       }
 
-      // 2. API thành công, lưu token
-      setAuthToken(data.access_token);
-
-      // 3. Báo cho Refine biết đã thành công và chuyển hướng
       return {
         success: true,
-        redirectTo: "/", // Chuyển hướng về trang chủ
+        redirectTo: "/login", // Chuyển hướng về trang login
       };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: new Error(error.message || "Lỗi đăng ký không xác định"),
-      };
-    }
   },
 
   // THÊM PHƯƠNG THỨC LOGIN (ĐỂ HOÀN THIỆN)
   login: async (params: LoginDto) => {
-     try {
-      const { data, success, message } = await apiFetch<AuthResponse>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify(params),
-      });
+      const { data, success, message } = await apiFetch<AuthResponse>(
+        "/auth/login",
+        {
+          method: "POST",
+          body: JSON.stringify(params),
+        }
+      );
 
-      if (!success || !data?.access_token) {
-        throw new Error(message || "Đăng nhập thất bại, không nhận được token.");
+      if (!success || !data?.accessToken) {
+        throw new Error(
+          message || "Đăng nhập thất bại, không nhận được token."
+        );
       }
-      
-      setAuthToken(data.access_token);
-      
+
+      await setAuthTokenServer(data);
+
       return {
         success: true,
-        redirectTo: "/admin/dashboard", // Chuyển hướng đến trang admin
+        redirectTo: "/",
       };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: new Error(error.message || "Lỗi đăng nhập không xác định"),
-      };
-    }
   },
 
   // CÁC PHƯƠNG THỨC CẦN THIẾT KHÁC (ĐỂ TRỐNG)
   logout: async () => {
-    removeAuthToken();
-    return { success: true, redirectTo: "/login" };
+    await removeAuthTokenServer();
+    return { success: true, redirectTo: "/" };
   },
 
   check: async () => {
-    const token = getAuthToken();
+    const token = await getAuthTokenServer();
     if (token) {
+      const user = await getUserServer();
+      if (!user) {
+        return { authenticated: false, redirectTo: "/" };
+      }
       return { authenticated: true };
     }
-    return { authenticated: false, redirectTo: "/login" };
+    return { authenticated: false, redirectTo: "/" };
   },
 
   getIdentity: async () => {
     // Tạm thời trả về null, bạn có thể gọi API /me tại đây
-    const token = getAuthToken();
+    const token = await getAuthTokenServer();
     if (token) {
-      return { id: 1, name: "User" }; // Lấy thông tin user
+      const user = await getUserServer();
+      if (!user) {
+        return null;
+      }
+      return {
+        id: user.id,
+        name: user.fullName,
+        role: user.role,
+      };
     }
     return null;
   },

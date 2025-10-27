@@ -1,17 +1,6 @@
-// src/features/auth/components/SignupForm.tsx
-'use client'
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { zodResolver } from "@hookform/resolvers/zod"
-import Link from "next/link"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { toast } from "sonner"
-// 1. Thay 'useCreate' bằng 'useRegister'
-import { useRegister } from "@refinedev/core"
-import { RegisterDto } from "../dtos/request/register.dto"
-import { Spinner } from "@/components/ui/spinner"
+"use client";
+import { Button } from "@/components/ui/button";
+import { FieldSeparator } from "@/components/ui/field";
 import {
   Form,
   FormControl,
@@ -20,32 +9,35 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { FieldSeparator } from "@/components/ui/field"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/sonner";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRegister } from "@refinedev/core";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import { RegisterDto } from "../dtos/request/register.dto";
+
 const formSchema = z.object({
-  fullName: z.string().min(1, { message: "Họ và tên là bắt buộc" }),
-  email: z.string().email({ message: "Email không hợp lệ" }),
+  fullName: z.string().min(1, { message: "Full name is required" }),
+  email: z.email({ message: "Invalid email" }),
   phoneNumber: z.string().optional(),
-  password: z
-    .string()
-    .min(6, { message: "Mật khẩu phải có ít nhất 6 ký tự" }),
-})
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
-  const { mutate, isLoading: isCreating } = useRegister<RegisterDto>({
-    
-    onSuccess: (response) => {
-      console.log("Đăng ký thành công (onSuccess callback):", response);
-      toast.success("Đăng ký thành công! Đang chuyển hướng...");
-    },
-    onError: (err) => {
-      console.error("Lỗi đăng ký (onError callback):", err);
-      toast.error(err.message || "Đăng ký thất bại. Vui lòng thử lại.");
-    },
-  });
+  const { mutate } = useRegister<RegisterDto>();
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,18 +47,31 @@ export function SignUpForm({
       phoneNumber: "",
       password: "",
     },
-  })
+  });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-  // Tạo object với snake_case để gửi đi
-  const registerDto: RegisterDto = {
-    full_name: values.fullName, // Sửa ở đây
-    email: values.email,        // (email và password giữ nguyên)
-    password: values.password,
-    ...(values.phoneNumber && { phone_number: values.phoneNumber }), // Sửa ở đây
-  }
-
-    mutate(registerDto);
+    setIsCreating(true);
+    const registerDto: RegisterDto = {
+      fullName: values.fullName,
+      email: values.email,
+      password: values.password,
+      ...(values.phoneNumber && { phoneNumber: values.phoneNumber }),
+    };
+    mutate(registerDto, {
+      onSuccess: (data) => {
+        toast.success(
+          data.successNotification?.message || "Create account successfully"
+        );
+        setIsCreating(false);
+        router.push(data.redirectTo || "/login");
+      },
+      onError: (error) => {
+        toast.error(
+          error.message || "Failed to create account, please try again"
+        );
+        setIsCreating(false);
+      },
+    });
   }
 
   return (
@@ -77,9 +82,9 @@ export function SignUpForm({
         {...props}
       >
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Tạo tài khoản</h1>
+          <h1 className="text-2xl font-bold">Sign Up</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Nhập thông tin của bạn dưới đây để tạo tài khoản
+            Enter your information below to create an account
           </p>
         </div>
 
@@ -89,7 +94,7 @@ export function SignUpForm({
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Họ và tên</FormLabel>
+              <FormLabel>Full name</FormLabel>
               <FormControl>
                 <Input placeholder="John Doe" {...field} />
               </FormControl>
@@ -97,7 +102,7 @@ export function SignUpForm({
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="email"
@@ -111,13 +116,13 @@ export function SignUpForm({
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="phoneNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Số điện thoại (Tuỳ chọn)</FormLabel>
+              <FormLabel>Phone number (Optional)</FormLabel>
               <FormControl>
                 <Input type="tel" placeholder="0123456789" {...field} />
               </FormControl>
@@ -125,15 +130,19 @@ export function SignUpForm({
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mật khẩu</FormLabel>
+              <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Phải có ít nhất 6 ký tự." {...field} />
+                <Input
+                  type="password"
+                  placeholder="At least 6 characters."
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -142,19 +151,19 @@ export function SignUpForm({
         {/* ... (Kết thúc FormField) ... */}
 
         <Button type="submit" disabled={isCreating}>
-          {isCreating && <Spinner className="mr-2" />}
-          {isCreating ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+          {isCreating ? <Spinner className="mr-2" /> : "Sign Up"}
         </Button>
-        
+
         <FieldSeparator />
-        
+
         <FormDescription className="text-center">
-          Đã có tài khoản?{" "}
+          Already have an account?{" "}
           <Link href="/login" className="underline underline-offset-4">
-            Đăng nhập
+            Login
           </Link>
         </FormDescription>
       </form>
+      <Toaster />
     </Form>
-  )
+  );
 }
