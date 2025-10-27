@@ -24,7 +24,7 @@ interface ProductDetailProps {
 export function ProductDetail({ product, reviews }: ProductDetailProps) {
   const image =
     product.image ||
-    "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&h=800&fit=crop";
+    `https://covers.openlibrary.org/b/isbn/${product.book?.isbn}-L.jpg`;
 
   const handleAddToCart = () => {
     toast.success(`Added ${product.title} to cart!`);
@@ -94,6 +94,8 @@ export function ProductDetail({ product, reviews }: ProductDetailProps) {
                 src={image}
                 alt={product.title}
                 className="w-full h-full object-cover"
+                preload
+                fill
               />
             </div>
           </div>

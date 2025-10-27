@@ -12,11 +12,14 @@ export const productColumns: ColumnDef<Product>[] = [
     accessorKey: "image",
     header: "Image",
     cell: ({ row }) => (
+      <div className="w-12 h-16 relative">
       <ImageWithFallback
-        src={row.original.image}
+        src={row.original.image || `https://covers.openlibrary.org/b/isbn/${row.original.book?.isbn}-M.jpg`}
         alt={row.original.title}
-        className="w-12 h-16 object-cover rounded"
+        fetchPriority="high"
+        fill  
       />
+      </div>
     ),
   },
   {

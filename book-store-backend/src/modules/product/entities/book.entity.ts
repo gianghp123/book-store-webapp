@@ -33,6 +33,15 @@ export class Book {
   @Column({ name: 'image_url', nullable: true })
   imageUrl?: string;
 
+  @Column({ nullable: true })
+  publisher?: string;
+
+  @Column({ name: 'pages_count', type: 'int', nullable: true })
+  pagesCount?: number;
+
+  @Column({ nullable: true })
+  isbn?: string;
+
   @ManyToMany(() => Author, (author) => author.books, { cascade: true })
   @JoinTable({
     name: 'book_authors',
