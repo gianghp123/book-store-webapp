@@ -19,7 +19,6 @@ export const dataProvider = (): DataProvider => ({
       throw new Error("Not implemented");
   },
   getList: async ({ resource, pagination, sorters }) => {
-    console.log('running')
     const { currentPage = 1, pageSize = 10 } = pagination ?? {};
     const sort = sorters?.[0]
 
@@ -32,11 +31,9 @@ export const dataProvider = (): DataProvider => ({
       },
     })
 
-    console.log(response)
-
     return {
       data: response.data,
-      total: response.pagination?.totalPages || 0,
+      total: response.pagination?.total || 0,
     }
   },
   getApiUrl: () => process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '',

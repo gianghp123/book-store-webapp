@@ -8,4 +8,5 @@ export class CategoryResponseDto extends BaseResponseDto {
   id: string;
   @Transform(({ value }) => capitalizeFirstLetter(value))
   name: string;
+  bookCount: number;
 }

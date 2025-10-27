@@ -37,6 +37,7 @@ export function ProductCatalogue() {
         pageSize: 16,
       },
     });
+
   const products = result?.data;
 
   const [filters, setFilters] = useState<FilterState>({
@@ -117,7 +118,7 @@ export function ProductCatalogue() {
           {/* Controls Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-4">
-              <h1>Books ({pageCount})</h1>
+              <h1>Books ({products.length})</h1>
 
               {/* Mobile Filter Button */}
               <Sheet>
