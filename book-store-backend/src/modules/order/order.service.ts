@@ -135,7 +135,7 @@ export class OrderService {
 
     const [orders, total] = await this.orderRepository.findAndCount({
       where: { user: { id: userId } },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'user'],
       order: { orderDate: 'DESC' },
       skip: offset,
       take: limit,

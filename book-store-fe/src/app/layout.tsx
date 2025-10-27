@@ -1,12 +1,13 @@
 "use client";
+import { resource } from "@/lib/routes/route-resources";
+import { authProvider } from "@/provider/auth-provider";
+import { dataProvider } from "@/provider/data-provider";
 import { queryClient } from "@/provider/react-query-provider";
+import { Refine } from "@refinedev/core";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
-import { Refine } from "@refinedev/core";
-import { dataProvider } from "@/provider/public-data-provider";
-import { authProvider } from "@/provider/auth-provider";
-import { resource } from "@/lib/routes/route-resources";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
             {children}
           </Refine>
         </QueryClientProvider>
+        <Toaster />
       </body>
     </html>
   );

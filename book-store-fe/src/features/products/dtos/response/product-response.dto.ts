@@ -1,8 +1,4 @@
-// Category interface for products
-export interface ProductCategory {
-  id: string; // UUID
-  name: string;
-}
+import { ProductCategory } from "@/features/categories/dtos/response/category.dto";
 
 // Author interface for products
 export interface ProductAuthor {

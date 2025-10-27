@@ -24,17 +24,18 @@ export class CategoryService {
     const { page = 1, limit = 10 } = paginationQuery;
     const offset = (page - 1) * limit;
 
-    const [categories, total] = await this.categoryRepository.findAndCount({
-      skip: offset,
-      take: limit,
-    });
+    const [categories, total] = await this.categoryRepository
+      .createQueryBuilder("category")
+      .loadRelationCountAndMap("category.bookCount", "category.books")
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount();
 
     const data = categories.map((category) =>
       CategoryResponseDto.fromEntity(category),
     );
 
     return {
-      
       data,
       pagination: {
         total,

@@ -1,19 +1,70 @@
 export const resource = [
-    {
-        name: "products",
-        list: "/",
-        show: "/product/:id",
-    },
-    {
-        name: "categories",
-        list: "/categories",
-    },
-    {
-        name: "orders",
-        show: "payment"
-    },
-    {
-        name: "carts",
-        show: "/cart"
-    },
-]
+  {
+    identifier: "products",
+    name: "products",
+    list: "/",
+    show: "/products/:id",
+  },
+  {
+    identifier: "categories",
+    name: "categories",
+    list: "/categories",
+    show: "/categories/:id",
+  },
+  {
+    identifier: "orders",
+    name: "orders",
+    show: "/orders/:id",
+    list: "/orders",
+  },
+  {
+    identifier: "carts",
+    name: "carts",
+    show: "/carts/:id",
+    list: "/carts",
+  },
+  { identifier: "users",
+    name: "users",
+    list: "/users",
+    show: "/users/:id",
+  },
+   {
+    identifier: "admin/products",
+    name: "products",
+    list: "/admin/products",
+    show: "/admin/products/:id",
+  },
+  {
+    identifier: "admin/categories",
+    name: "categories",
+    list: "/admin/categories",
+    show: "/admin/categories/:id",
+  },
+  {
+    identifier: "admin/orders",
+    name: "orders",
+    show: "/admin/orders/:id",
+    list: "/admin/orders",
+  },
+  {
+    identifier: "admin/carts",
+    name: "carts",
+    show: "/admin/carts/:id",
+    list: "/admin/carts",
+  },
+  {
+    identifier: "admin/users",
+    name: "users",
+    show: "/admin/users/:id",
+    list: "/admin/users",
+  },
+  {
+    name: "dashboard",
+    list: "/dashboard/admin",
+  },
+  { identifier: "admin/users",
+    name: "users",
+    list: "/admin/users",
+    show: "/admin/users/:id",
+  },
+];

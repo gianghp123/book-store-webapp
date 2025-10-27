@@ -3,7 +3,7 @@ import {
   Product,
   ProductReview,
 } from "@/features/products/dtos/response/product-response.dto";
-import { dataProvider } from "@/provider/public-data-provider";
+import { dataProvider } from "@/provider/data-provider";
 
 
 export const mockReviews: ProductReview[] = [

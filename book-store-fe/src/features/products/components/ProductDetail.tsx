@@ -176,7 +176,7 @@ export function ProductDetail({ product, reviews }: ProductDetailProps) {
           )}
           <Separator className="my-6" />
           <div>
-            <div className="mb-6 line-clamp-3">{product.description}</div>
+            <div className="mb-6">{product.description}</div>
           </div>
         </motion.div>
       </div>
