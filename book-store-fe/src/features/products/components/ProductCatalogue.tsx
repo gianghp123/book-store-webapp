@@ -147,8 +147,6 @@ export function ProductCatalogue() {
     return pages;
   };
 
-  // Logic loading (Không thay đổi)
-  // Nhờ 'keepPreviousData: true', 'isLoading' sẽ không bị true khi chuyển trang
   if (tableQuery.isLoading) {
     return (
       <div className="container flex justify-center items-center">
