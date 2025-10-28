@@ -1,4 +1,6 @@
+// Tệp: src/features/products/components/ProductCatalogue.tsx
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Pagination,
@@ -11,57 +13,106 @@ import {
 } from "@/components/ui/pagination";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
-import { FilterPanel } from "@/features/categories/components/FilterPanel";
+import { FilterPanel, FilterState } from "@/features/categories/components/FilterPanel"; // Import FilterState
 import { HttpError, useTable } from "@refinedev/core";
 import { Filter, Grid, List } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+
+// 1. CẬP NHẬT IMPORTS: Thêm useEffect và useRef
+import { useEffect, useState, useRef } from "react";
+// (Xóa useRouter, usePathname, useSearchParams vì không cần nữa)
+
 import { Product } from "../dtos/response/product-response.dto";
 import { ProductCard } from "./ProductCard";
 import { SortDropdown, SortOption } from "./SortDropDown";
 
-interface FilterState {
-  categories: string[];
-  minPrice: number;
-  maxPrice: number;
-  minRating: number;
-}
-
-const ITEMS_PER_PAGE = 8;
+// (Interface FilterState đã được import)
 
 export function ProductCatalogue() {
-  const { result, tableQuery, currentPage, setCurrentPage, pageCount } =
-    useTable<Product, HttpError>({
-      resource: "products",
-      pagination: {
-        pageSize: 16,
-      },
-    });
+  
+  // 2. CẤU HÌNH useTable THEO HƯỚNG DẪN CỦA BẠN
+  const {
+    result,
+    tableQuery,
+    currentPage, // 'current' được đổi tên thành 'currentPage'
+    setCurrentPage, // 'setCurrent' được đổi tên thành 'setCurrentPage'
+    pageCount,
+  } = useTable<Product, HttpError>({
+    resource: "products",
+    pagination: { pageSize: 16 },
+    syncWithLocation: true,
+    queryOptions: { keepPreviousData: true },
+  });
 
   const products = result?.data;
 
+  // State (giữ nguyên)
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     minPrice: 0,
     maxPrice: 1000,
     minRating: 0,
   });
-
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Reset to page 1 when filters or sort changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, sortBy]);
+  // 3. THÊM LOGIC CUỘN MƯỢT (THEO HƯỚNG DẪN CỦA BẠN)
+  const [shouldSmoothScroll, setShouldSmoothScroll] = useState(false);
+  const isFirstLoadRef = useRef(true);
 
+  useEffect(() => {
+    // Tắt khôi phục scroll mặc định của trình duyệt
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+
+    // Bỏ qua lần mount đầu (khi F5)
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+      return;
+    }
+    
+    // Nếu không phải do 'handlePageChange' kích hoạt -> không cuộn mượt
+    if (!shouldSmoothScroll) {
+      return;
+    }
+
+    // Chờ DOM render xong rồi mới cuộn mượt
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // Reset state trigger
+    setShouldSmoothScroll(false);
+    
+  }, [currentPage, shouldSmoothScroll]); // Kích hoạt khi trang thay đổi VÀ được cho phép
+
+  
+  // 4. CẬP NHẬT HÀM CHUYỂN TRANG (THEO "MẸO THÊM")
   const handlePageChange = (page: number) => {
+    // Đặt state trigger -> để 'useEffect' ở trên biết là cần cuộn mượt
+    setShouldSmoothScroll(true);
+    // Đặt trang (Refine sẽ tự sync URL)
     setCurrentPage(page);
-    // Scroll to top of products section
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Generate page numbers to display
+  // 5. CẬP NHẬT HÀM FILTER/SORT (KHÔNG CUỘN MƯỢT)
+  const handleFilterChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+    // Reset về trang 1 (Refine tự sync URL)
+    // KHÔNG đặt 'setShouldSmoothScroll' -> trang sẽ 'jump' lên đầu
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (newSort: SortOption) => {
+    setSortBy(newSort);
+    // Reset về trang 1
+    // KHÔNG đặt 'setShouldSmoothScroll' -> trang sẽ 'jump' lên đầu
+    setCurrentPage(1);
+  };
+
+
+  // Generate page numbers (Không thay đổi)
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
     const maxVisiblePages = 5;
@@ -93,10 +144,11 @@ export function ProductCatalogue() {
         pages.push(pageCount);
       }
     }
-
     return pages;
   };
 
+  // Logic loading (Không thay đổi)
+  // Nhờ 'keepPreviousData: true', 'isLoading' sẽ không bị true khi chuyển trang
   if (tableQuery.isLoading) {
     return (
       <div className="container flex justify-center items-center">
@@ -105,12 +157,14 @@ export function ProductCatalogue() {
     );
   }
 
+  // RETURN JSX
   return (
     <div className="container">
       <div className="flex gap-6">
         {/* Desktop Filter Panel */}
         <div className="hidden lg:block flex-shrink-0">
-          <FilterPanel filters={filters} onFiltersChange={setFilters} />
+          {/* Truyền hàm mới vào */}
+          <FilterPanel filters={filters} onFiltersChange={handleFilterChange} />
         </div>
 
         {/* Main Content */}
@@ -118,7 +172,7 @@ export function ProductCatalogue() {
           {/* Controls Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-4">
-              <h1>Books ({products.length})</h1>
+              <h1>Books ({result?.total ?? products.length})</h1>
 
               {/* Mobile Filter Button */}
               <Sheet>
@@ -130,9 +184,10 @@ export function ProductCatalogue() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 p-0">
                   <div className="p-4">
+                    {/* Truyền hàm mới vào */}
                     <FilterPanel
                       filters={filters}
-                      onFiltersChange={setFilters}
+                      onFiltersChange={handleFilterChange}
                       isMobile={true}
                     />
                   </div>
@@ -162,7 +217,8 @@ export function ProductCatalogue() {
               </div>
 
               {/* Sort Dropdown */}
-              <SortDropdown value={sortBy} onChange={setSortBy} />
+              {/* Truyền hàm mới vào */}
+              <SortDropdown value={sortBy} onChange={handleSortChange} />
             </div>
           </div>
 
@@ -174,8 +230,9 @@ export function ProductCatalogue() {
               </p>
               <Button
                 variant="outline"
+                // Cập nhật nút Clear Filters
                 onClick={() =>
-                  setFilters({
+                  handleFilterChange({
                     categories: [],
                     minPrice: 0,
                     maxPrice: 1000,
@@ -189,20 +246,28 @@ export function ProductCatalogue() {
             </div>
           ) : (
             <>
+              {/* Thêm hiệu ứng mờ khi tải trang mới (isFetching) */}
               <div
-                className={
-                  viewMode === "grid"
-                    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
-                    : "space-y-4"
-                }
+                className={`transition-opacity ${
+                  tableQuery.isFetching ? "opacity-70" : "opacity-100"
+                }`}
               >
-                {products.map((product) => (
-                  <Link href={`/products/${product.id}`} key={product.id}>
-                    <ProductCard product={product} />
-                  </Link>
-                ))}
+                <div
+                  className={
+                    viewMode === "grid"
+                      ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
+                      : "space-y-4"
+                  }
+                >
+                  {products.map((product) => (
+                    <Link href={`/products/${product.id}`} key={product.id}>
+                      <ProductCard product={product} />
+                    </Link>
+                  ))}
+                </div>
               </div>
 
+              {/* Pagination */}
               <div className="mt-8">
                 <Pagination>
                   <PaginationContent>
@@ -225,7 +290,7 @@ export function ProductCatalogue() {
                           <PaginationEllipsis />
                         ) : (
                           <PaginationLink
-                            onClick={() => handlePageChange(page)}
+                            onClick={() => handlePageChange(page as number)}
                             isActive={currentPage === page}
                             className="cursor-pointer"
                           >
