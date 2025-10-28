@@ -31,31 +31,32 @@ export class OrderService {
     private productRepository: Repository<Product>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async createOrder(
     userId: string,
     createOrderDto: CreateOrderDto,
   ): Promise<OrderResponseDto> {
-    // Find user
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`User with ID "${userId}" not found`);
     }
 
-    // Get cart items if no specific items provided in DTO
     let orderItems: OrderItem[] = [];
+    let isFromCart = false;
+    let cart: Cart | null = null;
+
     if (createOrderDto.items && createOrderDto.items.length > 0) {
-      // Handle "Buy now" scenario with specific items
       for (const item of createOrderDto.items) {
         const product = await this.productRepository.findOne({
           where: { id: item.productId },
+          relations: ['book'],
         });
+
         if (!product) {
-          throw new NotFoundException(
-            `Product with ID "${item.productId}" not found`,
-          );
+          throw new NotFoundException(`Product with ID "${item.productId}" not found`);
         }
+
         orderItems.push(
           this.orderItemRepository.create({
             product,
@@ -64,19 +65,16 @@ export class OrderService {
         );
       }
     } else {
-      // Handle cart checkout scenario
-      const cart = await this.cartRepository.findOne({
+      isFromCart = true;
+
+      cart = await this.cartRepository.findOne({
         where: { user: { id: userId } },
         relations: ['items', 'items.product'],
       });
 
-      if (!cart) {
-        throw new NotFoundException('Cart not found');
-      }
-
-      if (!cart.items || cart.items.length === 0) {
+      if (!cart) throw new NotFoundException('Cart not found');
+      if (!cart.items || cart.items.length === 0)
         throw new BadRequestException('Cart is empty');
-      }
 
       orderItems = cart.items.map((item) =>
         this.orderItemRepository.create({
@@ -86,45 +84,45 @@ export class OrderService {
       );
     }
 
-    // Calculate total amount
     const totalAmount = orderItems.reduce((sum, item) => sum + item.price, 0);
 
-    // Create order
     const newOrder = this.orderRepository.create({
       user,
       totalAmount,
-      status: 'Chờ xác nhận', // Pending confirmation
+      status: 'Success',
     });
     const savedOrder = await this.orderRepository.save(newOrder);
 
-    // Create order items and update product stock
     for (const item of orderItems) {
-      const orderItem = this.orderItemRepository.create({
+      await this.orderItemRepository.save({
         order: savedOrder,
         product: item.product,
         price: item.price,
       });
-      await this.orderItemRepository.save(orderItem);
-
-      // Update product sold count (assuming there's a number2 field that tracks sold items)
-      if (item.product['number2'] !== undefined) {
-        item.product['number2'] = (item.product['number2'] || 0) + 1;
-        await this.productRepository.save(item.product);
-      }
     }
 
-    // Clear cart if creating from cart items
-    if (!createOrderDto.items || createOrderDto.items.length === 0) {
-      const cart = await this.cartRepository.findOne({
-        where: { user: { id: userId } },
-      });
-      if (cart) {
-        await this.cartItemRepository.delete({ cart: { id: cart.id } });
+    console.log(isFromCart, cart)
+
+    if (isFromCart && cart) {
+      for (const orderItem of orderItems) {
+        console.log('OrderItem:', orderItem.product.id);
+        const cartItem = await this.cartItemRepository.findOne({
+          where: {
+            product: { id: orderItem.product.id },
+            cart: { id: cart.id },
+          },
+        });
+
+        if (cartItem) {
+          await this.cartItemRepository.remove(cartItem);
+        }
       }
     }
 
     return OrderResponseDto.fromEntity(savedOrder);
   }
+
+
 
   async getOrdersByUser(
     userId: string,
@@ -133,13 +131,22 @@ export class OrderService {
     const { page = 1, limit = 10 } = paginationQuery;
     const offset = (page - 1) * limit;
 
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with ID "${userId}" not found`);
+    }
+
     const [orders, total] = await this.orderRepository.findAndCount({
       where: { user: { id: userId } },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'items.product.book'],
       order: { orderDate: 'DESC' },
       skip: offset,
       take: limit,
     });
+
+    if (orders.length === 0) {
+      throw new NotFoundException('User has no orders');
+    }
 
     const orderResponseDtos = OrderResponseDto.fromEntities(orders);
 
@@ -154,6 +161,7 @@ export class OrderService {
 
     return paginatedOrdersDto;
   }
+
 
   async cancelOrder(cancelOrderDto: CancelOrderDto): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
@@ -212,4 +220,6 @@ export class OrderService {
 
     return paginatedOrdersDto;
   }
+
+
 }

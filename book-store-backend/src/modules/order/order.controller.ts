@@ -34,7 +34,7 @@ export class OrderController {
     return this.orderService.createOrder(req.user.id, createOrderDto);
   }
 
-  @Get()
+  @Get("/me")
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async getUserOrders(@Request() req, @Query() paginationQuery: PaginationQueryDto): Promise<PaginatedOrdersDto> {

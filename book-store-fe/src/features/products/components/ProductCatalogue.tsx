@@ -49,7 +49,6 @@ export function ProductCatalogue() {
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Reset to page 1 when filters or sort changes
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, sortBy]);

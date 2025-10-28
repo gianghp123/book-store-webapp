@@ -16,7 +16,14 @@ export class CartController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getCart(@Request() req): Promise<CartResponseDto> {
-    // TODO: Implement get the current user's cart
+    console.log('User được gắn vào request:', req.user.id);
+    return this.cartService.getCart();
+  }
+
+  @Get("/me")
+  @HttpCode(HttpStatus.OK)
+  async getCartByUser(@Request() req): Promise<CartResponseDto> {
+    console.log('User được gắn vào request:', req.user.id);
     return this.cartService.getCartByUser(req.user.id);
   }
 

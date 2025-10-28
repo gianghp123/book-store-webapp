@@ -24,19 +24,17 @@ export class CartService {
     private productRepository: Repository<Product>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async addToCart(
     userId: string,
     addToCartDto: AddToCartDto,
   ): Promise<CartResponseDto> {
-    // Find or create user's cart
     let cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
     });
 
     if (!cart) {
-      // Create a new cart for the user
       const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException(`User with ID "${userId}" not found`);
@@ -45,7 +43,6 @@ export class CartService {
       await this.cartRepository.save(cart);
     }
 
-    // Check if product exists
     const product = await this.productRepository.findOne({
       where: { id: addToCartDto.productId },
     });
@@ -55,7 +52,6 @@ export class CartService {
       );
     }
 
-    // Check if item already exists in cart (for e-book store, one copy per cart)
     const existingItem = await this.cartItemRepository.findOne({
       where: {
         cart: { id: cart.id },
@@ -66,7 +62,6 @@ export class CartService {
     if (existingItem) {
       throw new BadRequestException('Product already exists in cart');
     } else {
-      // Add item to cart (quantity is always 1 for e-books)
       const cartItem = this.cartItemRepository.create({
         cart,
         product,
@@ -78,7 +73,6 @@ export class CartService {
   }
 
   async getCartByUser(userId: string): Promise<CartResponseDto> {
-    // Find user's cart
     const cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
       relations: ['items', 'items.product', 'items.product.book'],
@@ -88,6 +82,20 @@ export class CartService {
       throw new NotFoundException('Cart not found');
     }
 
+    cart.items.forEach(item => {
+      if (item.product?.book) {
+        (item.product.book as any).fileUrl = undefined;
+      }
+    });
+
+    return CartResponseDto.fromEntity(cart);
+  }
+
+  async getCart(): Promise<CartResponseDto> {
+    const cart = await this.cartItemRepository.find({
+      relations: ['product', 'product.book'],
+    });
+
     return CartResponseDto.fromEntity(cart);
   }
 
@@ -95,7 +103,6 @@ export class CartService {
     userId: string,
     removeFromCartDto: RemoveFromCartDto,
   ): Promise<CartItemResponseDto> {
-    // Find user's cart
     const cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
     });
@@ -103,7 +110,6 @@ export class CartService {
       throw new NotFoundException('Cart not found');
     }
 
-    // Find the cart item to remove
     const item = await this.cartItemRepository.findOne({
       where: {
         product: { id: removeFromCartDto.productId },
@@ -121,7 +127,6 @@ export class CartService {
   }
 
   async clearCart(userId: string): Promise<CartResponseDto> {
-    // Find user's cart
     const cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
       relations: ['items'],
@@ -131,8 +136,8 @@ export class CartService {
       throw new NotFoundException('Cart not found');
     }
 
-    // Remove all cart items
     if (cart.items && cart.items.length > 0) {
+      
       await this.cartItemRepository.delete({ cart: { id: cart.id } });
     }
 

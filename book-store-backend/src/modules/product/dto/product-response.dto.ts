@@ -10,17 +10,30 @@ import { capitalizeFirstLetter } from 'src/core/utils/string.util';
 @AutoExpose()
 export class ProductResponseDto extends BaseResponseDto {
   id: string;
+
   @Transform(({ value }) => capitalizeFirstLetter(value))
   title: string;
+
   description?: string;
+
+  @IsOptional()
+  @Transform(({ obj }) => obj.book?.imageUrl)
+  imageUrl?: string;
+
+  @IsOptional()
+  @Transform(({ obj }) => obj.book?.fileUrl)
+  fileUrl?: string;
+
   price: number;
   rating: number;
   ratingCount: number;
   createdAt: Date;
   updatedAt: Date;
+
   @IsOptional()
   @Type(() => CategoryResponseDto)
   categories?: CategoryResponseDto[];
+
   @IsOptional()
   @Type(() => AuthorResponseDto)
   authors?: AuthorResponseDto[];

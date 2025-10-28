@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:latest
+    container_name: db-book-store
+    env_file: .env
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant-book-store
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${QDRANT_PORT}:6333"    # REST API
+      - "${QDRANT_GRPC_PORT}:6334"  # gRPC API
+    volumes:
+      - qdrant_data:/qdrant/storage:z 
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: ${QDRANT_GRPC_PORT}
+      QDRANT__SERVICE__HTTP_PORT: ${QDRANT_PORT}
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-book-store
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  pgdata:
+  redis_data:
+  qdrant_data:

@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Query, Param } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Query, Param, Request } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/core/decorators/role.decorator';
 import { Role } from 'src/core/enums/role.enum';
@@ -8,7 +8,7 @@ import { UserResponseDto, PaginatedUsersDto } from './dto/user-response.dto';
 @ApiBearerAuth()
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -34,5 +34,12 @@ export class UserController {
     @Param('id') id: string,
   ): Promise<UserResponseDto> {
     return await this.userService.findOne(id);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get current user' })
+  async getMyUser(@Request() req): Promise<UserResponseDto> {
+    return await this.userService.findOne(req.user.id);
   }
 }
