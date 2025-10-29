@@ -27,6 +27,7 @@ export class CategoryService {
     const [categories, total] = await this.categoryRepository
       .createQueryBuilder("category")
       .loadRelationCountAndMap("category.bookCount", "category.books")
+      .orderBy("category.name", "ASC")
       .skip(offset)
       .take(limit)
       .getManyAndCount();

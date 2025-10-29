@@ -53,68 +53,68 @@ interface About1Props {
 const defaultFeatures: Feature[] = [
   {
     icon: Rocket,
-    title: "Pushing boundaries",
+    title: "Curated Collections",
     description:
-      "We constantly challenge the status quo, exploring new frontiers in AI and machine learning to deliver groundbreaking solutions.",
+      "We handpick books from top publishers and independent authors to bring you the best reads across every genre.",
     link: "/test",
   },
   {
     icon: Lightbulb,
-    title: "Fostering innovation",
+    title: "Personalized Recommendations",
     description:
-      "Our culture thrives on creativity and out-of-the-box thinking. We encourage bold ideas and turn them into reality.",
+      "Our smart system suggests books you’ll love based on your taste, reading history, and favorite authors.",
     link: "/test",
     learnMoreText: "Learn more",
   },
   {
     icon: Users,
-    title: "Empowering collaboration",
+    title: "Community & Collaboration",
     description:
-      "We believe in the power of diverse teams working together. Our tools are designed to enhance human potential, not replace it.",
+      "Join a vibrant community of readers and writers. Share reviews, insights, and connect over your favorite stories.",
     link: "/test",
     learnMoreText: "Learn more",
   },
 ];
 
 const defaultStats: Stat[] = [
-  { number: "10M+", label: "Professionals Empowered" },
-  { number: "150+", label: "Countries Reached" },
-  { number: "98%", label: "Client Satisfaction" },
-  { number: "24/7", label: "Support Available" },
+  { number: "1M+", label: "Happy Readers" },
+  { number: "50+", label: "Countries Reached" },
+  { number: "98%", label: "Reader Satisfaction" },
+  { number: "24/7", label: "Book Support & Delivery" },
 ];
 
 function About1({
   // Hero section - inline defaults for simple strings
   badgeText = "Learn About Us",
-  title = "Revolutionizing the",
-  titleHighlight = "Future of work",
-  description = "We're on a mission to empower teams with cutting-edge AI tools, transforming how businesses operate and innovate. Experience the future of productivity, today.",
+  title = "Inspiring the",
+  titleHighlight = "Future of Reading",
+  description = "Our Book Store aims to bring convenience and inspiration to book lovers through a modern online shopping experience - Discover, explore, and enjoy your favorite books anytime, anywhere.",
 
   // Vision section
-  visionImageSrc = "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1200",
-  visionImageAlt = "Team collaboration",
+  visionImageSrc = "/about-1.jpg",
+  visionImageAlt = "VISION Image",
   visionBadge = "OUR VISION",
-  visionText = "We envision a world where AI-powered tools are accessible to everyone, enabling unprecedented levels of creativity, efficiency, and problem-solving across all industries.",
+  visionText = "To create an intelligent and user-friendly online bookstore where reading becomes easier, smarter, and more personalized.",
 
   // Mission section
-  missionImageSrc = "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1200",
-  missionImageAlt = "Team collaboration",
+  missionImageSrc = "/about-2.jpg",
+  missionImageAlt = "MISSION Image",
   missionBadge = "OUR MISSION",
-  missionText = "Empowering 10 million professionals with AI-enhanced capabilities by 2030",
+  missionText = "To create an intelligent and user-friendly online bookstore where reading becomes easier, smarter, and more personalized.",
 
   // Approach section
   approachBadge = "Our Approach",
-  approachTitle = "Transforming ideas into reality",
-  approachDescription = "Our goal is to empower 10 million professionals with AI-enhanced capabilities by 2030. Here's how we're making it happen:",
+  approachTitle = "Turning passion for books into a global community",
+  approachDescription = "Our goal is to empower readers and writers by creating a platform that celebrates stories, creativity, and shared experiences. Here’s how we make it happen:",
   features = defaultFeatures,
 
   // CTA section
   ctaBadge = "JOIN OUR TEAM",
-  ctaTitle = "Join us in shaping the future of AI",
-  ctaDescription = "We're always on the lookout for passionate individuals who want to make a real impact. If you're excited about pushing the boundaries of what's possible with AI, we want to hear from you.",
+  ctaTitle = "Join us in shaping the future of reading",
+  ctaDescription = "We’re looking for passionate people who love books and want to make reading accessible to everyone. If you’re excited about connecting readers and writers worldwide — we’d love to have you on board.",
   ctaButton1Text = "View open positions",
   ctaButton2Text = "Learn about our culture",
-  ctaImageSrc = "https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1200",
+  ctaImageSrc = "/about-3.jpg",
   ctaImageAlt = "Team working together",
   ctaImageOverlayText = "Join our growing team",
   ctaImageOverlaySubtext = "20+ open positions",
