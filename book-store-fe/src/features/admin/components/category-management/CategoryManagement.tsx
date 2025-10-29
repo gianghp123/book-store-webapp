@@ -31,6 +31,8 @@ export function CategoryManagement() {
     pagination: {
       pageSize: 10,
     },
+    syncWithLocation: true,
+    
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);

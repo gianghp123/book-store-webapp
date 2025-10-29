@@ -1,12 +1,18 @@
+// src/features/categories/components/FilterPanel.tsx
 'use client'
-import { ChevronDown, Filter, X } from "lucide-react";
+// Import thêm icon Search từ lucide-react
+import { ChevronDown, Filter, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Spinner } from "@/components/ui/spinner";
+import { dataProvider } from "@/provider/data-provider";
+import { ProductCategory } from "../dtos/response/category.dto";
+import { toast } from "sonner";
 
 export interface FilterState {
   categories: string[];
@@ -22,28 +28,6 @@ interface FilterPanelProps {
   isMobile?: boolean;
 }
 
-const bookCategories = [
-  { id: "fiction", label: "Fiction", count: 342 },
-  { id: "non-fiction", label: "Non-Fiction", count: 289 },
-  { id: "mystery", label: "Mystery & Thriller", count: 156 },
-  { id: "romance", label: "Romance", count: 198 },
-  { id: "scifi", label: "Science Fiction", count: 134 },
-  { id: "fantasy", label: "Fantasy", count: 167 },
-  { id: "biography", label: "Biography", count: 98 },
-  { id: "history", label: "History", count: 124 },
-  { id: "selfhelp", label: "Self-Help", count: 187 },
-  { id: "business", label: "Business & Finance", count: 145 },
-  { id: "cooking", label: "Cooking", count: 89 },
-  { id: "travel", label: "Travel", count: 76 },
-  { id: "children", label: "Children's Books", count: 234 },
-  { id: "youngadult", label: "Young Adult", count: 178 },
-  { id: "poetry", label: "Poetry", count: 67 },
-  { id: "drama", label: "Drama", count: 54 },
-  { id: "classics", label: "Classics", count: 112 },
-  { id: "science", label: "Science & Nature", count: 93 },
-  { id: "art", label: "Art & Photography", count: 81 },
-  { id: "religion", label: "Religion & Spirituality", count: 72 },
-];
 
 export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = false }: FilterPanelProps) {
   const [openSections, setOpenSections] = useState({
@@ -51,6 +35,33 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
     price: true,
     rating: true,
   });
+
+  const [apiCategories, setApiCategories] = useState<ProductCategory[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const response = await dataProvider().getList<ProductCategory>({
+          resource: 'categories',
+          pagination: {
+            pageSize: 10000,
+          }
+        });
+        setApiCategories(response.data || []);
+      } catch (error: any) {
+        console.error("Error fetching categories:", error);
+        toast.error("Could not load categories for filtering.");
+        setApiCategories([]);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({
@@ -63,7 +74,7 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
     const newCategories = checked
       ? [...filters.categories, categoryId]
       : filters.categories.filter(id => id !== categoryId);
-    
+
     onFiltersChange({
       ...filters,
       categories: newCategories,
@@ -86,6 +97,14 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
     });
   };
 
+  // --- HÀM XỬ LÝ SEARCH (TẠM THỜI) ---
+  const handlePriceSearch = () => {
+    console.log("Search button clicked with filters:", filters);
+    // Bạn sẽ thêm logic gọi API hoặc cập nhật state ở đây
+    // Ví dụ: onFiltersChange(filters); // Gọi lại hàm này để trigger ProductCatalogue cập nhật
+  };
+  // --- KẾT THÚC HÀM XỬ LÝ SEARCH ---
+
   const handleRatingChange = (rating: number) => {
     onFiltersChange({
       ...filters,
@@ -102,13 +121,14 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
     });
   };
 
-  const filterCount = filters.categories.length + 
+  const filterCount = filters.categories.length +
     (filters.minPrice > 0 || filters.maxPrice < 1000 ? 1 : 0) +
     (filters.minRating > 0 ? 1 : 0);
 
   return (
     <Card className={`h-fit sticky top-20 ${isMobile ? 'w-full' : 'w-80'}`}>
       <CardHeader className="pb-3">
+        {/* Header giữ nguyên */}
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
@@ -135,44 +155,57 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Categories with Scroll */}
-        <Collapsible 
+        {/* Categories Section */}
+        <Collapsible
           open={openSections.categories}
           onOpenChange={() => toggleSection('categories')}
         >
+          {/* ... Nội dung Categories giữ nguyên ... */}
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-              <span>Categories</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.categories ? 'rotate-180' : ''}`} />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3">
-            <ScrollArea className="h-[300px] pr-4">
-              <div className="space-y-3">
-                {bookCategories.map((category) => (
-                  <div key={category.id} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={category.id}
-                        checked={filters.categories.includes(category.id)}
-                        onCheckedChange={(checked) => 
-                          handleCategoryChange(category.id, checked as boolean)
-                        }
-                      />
-                      <label htmlFor={category.id} className="text-sm cursor-pointer">
-                        {category.label}
-                      </label>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{category.count}</span>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CollapsibleContent>
+             <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+               <span>Categories</span>
+               <ChevronDown className={`h-4 w-4 transition-transform ${openSections.categories ? 'rotate-180' : ''}`} />
+             </Button>
+           </CollapsibleTrigger>
+           <CollapsibleContent className="mt-3">
+             {isLoadingCategories ? (
+               <div className="flex justify-center items-center h-[300px]">
+                 <Spinner />
+               </div>
+             ) : (
+               apiCategories.length > 0 ? (
+                 <ScrollArea className="h-[300px] pr-4">
+                   <div className="space-y-3">
+                     {apiCategories.map((category) => (
+                       <div key={category.id} className="flex items-center justify-between">
+                         <div className="flex items-center space-x-2">
+                           <Checkbox
+                             id={`cat-${category.id}`}
+                             checked={filters.categories.includes(category.id)}
+                             onCheckedChange={(checked) =>
+                               handleCategoryChange(category.id, checked as boolean)
+                             }
+                           />
+                           <label htmlFor={`cat-${category.id}`} className="text-sm cursor-pointer">
+                             {category.name}
+                           </label>
+                         </div>
+                         <span className="text-xs text-muted-foreground">{category.bookCount}</span>
+                       </div>
+                     ))}
+                   </div>
+                 </ScrollArea>
+               ) : (
+                 <div className="text-sm text-muted-foreground text-center h-[300px] flex items-center justify-center">
+                   No categories found.
+                 </div>
+               )
+             )}
+           </CollapsibleContent>
         </Collapsible>
 
-        {/* Price Range */}
-        <Collapsible 
+        {/* Price Range Section */}
+        <Collapsible
           open={openSections.price}
           onOpenChange={() => toggleSection('price')}
         >
@@ -217,37 +250,17 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
                 </div>
               </div>
             </div>
+             {/* --- THÊM NÚT SEARCH VÀO ĐÂY --- */}
+            
+             {/* --- KẾT THÚC NÚT SEARCH --- */}
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Rating */}
-        <Collapsible 
-          open={openSections.rating}
-          onOpenChange={() => toggleSection('rating')}
-        >
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-              <span>Minimum Rating</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.rating ? 'rotate-180' : ''}`} />
+        {/* Rating Section */}
+        <Button onClick={handlePriceSearch} size="sm" className="w-full mt-2">
+              <Search className="mr-2 h-4 w-4" />
+              Search
             </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3 space-y-2">
-            {[4, 3, 2, 1].map((rating) => (
-              <div key={rating} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`rating-${rating}`}
-                  checked={filters.minRating === rating}
-                  onCheckedChange={(checked) => 
-                    handleRatingChange(checked ? rating : 0)
-                  }
-                />
-                <label htmlFor={`rating-${rating}`} className="text-sm cursor-pointer flex items-center gap-1">
-                  {rating}+ Stars
-                </label>
-              </div>
-            ))}
-          </CollapsibleContent>
-        </Collapsible>
       </CardContent>
     </Card>
   );
