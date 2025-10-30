@@ -1,4 +1,3 @@
-// Tệp: src/features/products/components/ProductCatalogue.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -13,29 +12,22 @@ import {
 } from "@/components/ui/pagination";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
-import { FilterPanel, FilterState } from "@/features/categories/components/FilterPanel"; // Import FilterState
+import { FilterPanel, FilterState } from "@/features/categories/components/FilterPanel"; 
 import { HttpError, useTable } from "@refinedev/core";
 import { Filter, Grid, List } from "lucide-react";
 import Link from "next/link";
-
-// 1. CẬP NHẬT IMPORTS: Thêm useEffect và useRef
 import { useEffect, useState, useRef } from "react";
-// (Xóa useRouter, usePathname, useSearchParams vì không cần nữa)
-
 import { Product } from "../dtos/response/product-response.dto";
 import { ProductCard } from "./ProductCard";
 import { SortDropdown, SortOption } from "./SortDropDown";
 
-// (Interface FilterState đã được import)
 
 export function ProductCatalogue() {
-  
-  // 2. CẤU HÌNH useTable THEO HƯỚNG DẪN CỦA BẠN
   const {
     result,
     tableQuery,
-    currentPage, // 'current' được đổi tên thành 'currentPage'
-    setCurrentPage, // 'setCurrent' được đổi tên thành 'setCurrentPage'
+    currentPage,
+    setCurrentPage, 
     pageCount,
   } = useTable<Product, HttpError>({
     resource: "products",
@@ -46,7 +38,6 @@ export function ProductCatalogue() {
 
   const products = result?.data;
 
-  // State (giữ nguyên)
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     minPrice: 0,
@@ -55,64 +46,41 @@ export function ProductCatalogue() {
   });
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  // 3. THÊM LOGIC CUỘN MƯỢT (THEO HƯỚNG DẪN CỦA BẠN)
   const [shouldSmoothScroll, setShouldSmoothScroll] = useState(false);
   const isFirstLoadRef = useRef(true);
 
   useEffect(() => {
-    // Tắt khôi phục scroll mặc định của trình duyệt
     if ("scrollRestoration" in history) {
       history.scrollRestoration = "manual";
     }
-
-    // Bỏ qua lần mount đầu (khi F5)
     if (isFirstLoadRef.current) {
       isFirstLoadRef.current = false;
       return;
     }
-    
-    // Nếu không phải do 'handlePageChange' kích hoạt -> không cuộn mượt
     if (!shouldSmoothScroll) {
       return;
     }
-
-    // Chờ DOM render xong rồi mới cuộn mượt
     requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
-
-    // Reset state trigger
     setShouldSmoothScroll(false);
     
-  }, [currentPage, shouldSmoothScroll]); // Kích hoạt khi trang thay đổi VÀ được cho phép
+  }, [currentPage, shouldSmoothScroll]); 
 
-  
-  // 4. CẬP NHẬT HÀM CHUYỂN TRANG (THEO "MẸO THÊM")
   const handlePageChange = (page: number) => {
-    // Đặt state trigger -> để 'useEffect' ở trên biết là cần cuộn mượt
     setShouldSmoothScroll(true);
-    // Đặt trang (Refine sẽ tự sync URL)
     setCurrentPage(page);
   };
-
-  // 5. CẬP NHẬT HÀM FILTER/SORT (KHÔNG CUỘN MƯỢT)
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
-    // Reset về trang 1 (Refine tự sync URL)
-    // KHÔNG đặt 'setShouldSmoothScroll' -> trang sẽ 'jump' lên đầu
     setCurrentPage(1);
   };
 
   const handleSortChange = (newSort: SortOption) => {
     setSortBy(newSort);
-    // Reset về trang 1
-    // KHÔNG đặt 'setShouldSmoothScroll' -> trang sẽ 'jump' lên đầu
     setCurrentPage(1);
   };
 
-
-  // Generate page numbers (Không thay đổi)
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
     const maxVisiblePages = 5;
@@ -155,24 +123,16 @@ export function ProductCatalogue() {
     );
   }
 
-  // RETURN JSX
   return (
     <div className="container">
       <div className="flex gap-6">
-        {/* Desktop Filter Panel */}
         <div className="hidden lg:block flex-shrink-0">
-          {/* Truyền hàm mới vào */}
           <FilterPanel filters={filters} onFiltersChange={handleFilterChange} />
         </div>
-
-        {/* Main Content */}
         <div className="flex-1">
-          {/* Controls Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div className="flex items-center gap-4">
               <h1>Books ({result?.total ?? products.length})</h1>
-
-              {/* Mobile Filter Button */}
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm" className="lg:hidden">
@@ -182,7 +142,6 @@ export function ProductCatalogue() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 p-0">
                   <div className="p-4">
-                    {/* Truyền hàm mới vào */}
                     <FilterPanel
                       filters={filters}
                       onFiltersChange={handleFilterChange}
@@ -194,7 +153,6 @@ export function ProductCatalogue() {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* View Mode Toggle */}
               <div className="flex items-center border rounded-md">
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
@@ -214,8 +172,6 @@ export function ProductCatalogue() {
                 </Button>
               </div>
 
-              {/* Sort Dropdown */}
-              {/* Truyền hàm mới vào */}
               <SortDropdown value={sortBy} onChange={handleSortChange} />
             </div>
           </div>
@@ -228,7 +184,6 @@ export function ProductCatalogue() {
               </p>
               <Button
                 variant="outline"
-                // Cập nhật nút Clear Filters
                 onClick={() =>
                   handleFilterChange({
                     categories: [],
@@ -244,7 +199,6 @@ export function ProductCatalogue() {
             </div>
           ) : (
             <>
-              {/* Thêm hiệu ứng mờ khi tải trang mới (isFetching) */}
               <div
                 className={`transition-opacity ${
                   tableQuery.isFetching ? "opacity-70" : "opacity-100"

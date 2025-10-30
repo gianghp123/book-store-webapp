@@ -1,4 +1,3 @@
-// src/provider/data-provider.ts
 import { apiFetch } from "@/lib/api-fetch";
 import { DataProvider } from "@refinedev/core";
 

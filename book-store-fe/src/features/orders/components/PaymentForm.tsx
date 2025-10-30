@@ -1,5 +1,8 @@
 "use client";
 
+// 1. Imports: Thêm useRouter, useState và Spinner
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +12,11 @@ import Image from "next/image";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner"; 
+// 2. Import kiểu OrderDetail từ file Confirmation
+import { type OrderDetail } from "./Confirmation"; 
 
+// ... (Các interface (SavedCard, OrderItem, v.v.) giữ nguyên) ...
 interface SavedCard {
   cardType: string;
   lastFour: string;
@@ -74,6 +81,9 @@ interface PaymentFormProps {
   securityFooterText?: string;
 }
 
+// 3. Định nghĩa key cho sessionStorage
+export const CONFIRMATION_DATA_KEY = "orderConfirmationData";
+
 const PaymentForm1 = ({
   title = "Complete Your Purchase",
   secureBadgeText = "Secure SSL Encryption",
@@ -135,8 +145,56 @@ const PaymentForm1 = ({
   ],
   securityFooterText = "Secured by Stripe • PCI DSS compliant • SERP LLC - United States",
 }: PaymentFormProps) => {
+
+  // 4. Thêm state cho router, loading và các trường form
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [cardholderName, setCardholderName] = useState("John Doe"); // Lấy placeholder làm giá trị mặc định
+  const [zipCode, setZipCode] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Credit Card"); // Thêm state cho phương thức thanh toán
+
+  // 5. Cập nhật hàm xử lý thanh toán (mock)
+  const handleMockPayment = (e: React.MouseEvent<HTMLButtonElement>, method: string) => {
+    e.preventDefault();
+    if (isLoading) return;
+    setIsLoading(true);
+
+    // Cập nhật phương thức thanh toán dựa trên nút nào được nhấp
+    setPaymentMethod(method);
+
+    // Giả lập gọi API trong 1.5 giây
+    setTimeout(() => {
+      // ID đơn hàng giả lập
+      const mockOrderId = "mock-order-12345"; 
+      
+      // 6. Tạo đối tượng dữ liệu để truyền
+      const confirmationData: OrderDetail[] = [
+        { label: "Date", value: new Date().toLocaleDateString() }, // Lấy ngày hiện tại
+        { label: "Payment Method", value: method }, // Sử dụng phương thức thanh toán
+        { label: "Name", value: cardholderName }, // Lấy từ state
+        { label: "ZIP Code", value: zipCode }, // Lấy từ state (chỉ hiển thị nếu có)
+        { label: "Phone", value: "+(123) 456 7890" }, // Dữ liệu mock
+      ];
+
+      // 7. Lưu vào sessionStorage
+      try {
+        // Lọc ra các chi tiết có giá trị
+        const validData = confirmationData.filter(detail => detail.value);
+        sessionStorage.setItem(CONFIRMATION_DATA_KEY, JSON.stringify(validData));
+      } catch (error) {
+        console.error("Could not save to sessionStorage", error);
+      }
+      
+      // 8. Chuyển hướng đến trang xác nhận
+      router.push(`/confirmation/${mockOrderId}`);
+      
+    }, 1500); 
+  };
+
+
   return (
     <div>
+      {/* ... (Phần tiêu đề giữ nguyên) ... */}
       <div className="mb-8 flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
         <Badge variant="outline" className="gap-2 px-4 py-2">
@@ -150,12 +208,13 @@ const PaymentForm1 = ({
           <CardContent className="pt-6">
             <Tabs defaultValue="card">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="card">{creditCardTabLabel}</TabsTrigger>
-                <TabsTrigger value="paypal">{paypalTabLabel}</TabsTrigger>
+                <TabsTrigger value="card" onClick={() => setPaymentMethod('Credit Card')}>{creditCardTabLabel}</TabsTrigger>
+                <TabsTrigger value="paypal" onClick={() => setPaymentMethod('PayPal')}>{paypalTabLabel}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="card" className="mt-6">
                 <div className="space-y-6">
+                  {/* ... (RadioGroup giữ nguyên) ... */}
                   <RadioGroup defaultValue="new" className="space-y-4">
                     <div className="rounded-lg border p-4">
                       <label className="flex cursor-pointer items-center gap-4">
@@ -165,7 +224,6 @@ const PaymentForm1 = ({
                         </span>
                       </label>
                     </div>
-
                     <div className="rounded-lg border p-4">
                       <label className="flex cursor-pointer items-center gap-4">
                         <RadioGroupItem value="saved" id="saved" />
@@ -191,9 +249,12 @@ const PaymentForm1 = ({
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">{cardholderNameLabel}</Label>
+                      {/* 9. Kết nối state với Input */}
                       <Input
                         id="name"
                         placeholder={cardholderNamePlaceholder}
+                        value={cardholderName}
+                        onChange={(e) => setCardholderName(e.target.value)}
                       />
                     </div>
 
@@ -221,7 +282,13 @@ const PaymentForm1 = ({
 
                     <div className="space-y-2">
                       <Label htmlFor="zip">{zipCodeLabel}</Label>
-                      <Input id="zip" placeholder={zipCodePlaceholder} />
+                      {/* 10. Kết nối state với Input */}
+                      <Input 
+                        id="zip" 
+                        placeholder={zipCodePlaceholder} 
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -231,11 +298,27 @@ const PaymentForm1 = ({
                         <Button variant="outline">{applyButtonLabel}</Button>
                       </div>
                     </div>
+
+                    {/* 11. Cập nhật nút "Pay" */}
+                    <Button 
+                      className="w-full" 
+                      size="lg" 
+                      onClick={(e) => handleMockPayment(e, 'Credit Card')}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <Spinner className="mr-2" />
+                      ) : (
+                        `Pay $${orderSummary.total.toFixed(2)}`
+                      )}
+                    </Button>
+
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="paypal" className="mt-6">
+                {/* 12. Cập nhật nút PayPal */}
                 <div className="flex flex-col items-center space-y-6 py-8">
                   <Image
                     src={paypalImageUrl}
@@ -247,8 +330,17 @@ const PaymentForm1 = ({
                   <p className="text-center text-muted-foreground">
                     {paypalRedirectMessage}
                   </p>
-                  <Button className="w-full">
-                    {continueWithPaypalButtonLabel}
+                  
+                  <Button 
+                    className="w-full"
+                    onClick={(e) => handleMockPayment(e, 'PayPal')}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Spinner className="mr-2" />
+                    ) : (
+                      continueWithPaypalButtonLabel
+                    )}
                   </Button>
                 </div>
               </TabsContent>
@@ -256,6 +348,7 @@ const PaymentForm1 = ({
           </CardContent>
         </Card>
 
+        {/* ... (Phần Order Summary bên phải giữ nguyên) ... */}
         <Card className="border">
           <CardContent className="pt-6">
             <div className="space-y-6">
