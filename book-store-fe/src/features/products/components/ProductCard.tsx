@@ -28,7 +28,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         <div className="relative aspect-[3/4] overflow-hidden">
           <ImageWithFallback
             fetchPriority="high"
-            src={product.image || `https://covers.openlibrary.org/b/isbn/${product.book?.isbn}-M.jpg`}
+            src={product.image || `https://covers.openlibrary.org/b/isbn/${product.isbn}-M.jpg`}
             alt={product.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             fill

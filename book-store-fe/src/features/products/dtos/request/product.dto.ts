@@ -1,3 +1,5 @@
+import { SearchType } from "@/lib/constants/enums";
+
 // Product creation request
 export interface CreateProductDto {
   title: string;
@@ -19,6 +21,7 @@ export interface ProductFilterQueryDto {
   maxPrice?: number;
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC'; // enum: ASC, DESC
+  searchType?: SearchType;
 }
 
 // Hybrid search query parameters

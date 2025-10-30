@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
-import { Product } from "../dtos/response/product-response.dto";
+import { useEffect, useState } from "react";
 import { ProductFilterQueryDto } from "../dtos/request/product.dto";
+import { Product } from "../dtos/response/product-response.dto";
 import { productService } from "../services/productService";
-import { ServerResponseModel } from "@/lib/typedefs/server-response";
 
 interface UseProductsReturn {
   products: Product[];
@@ -14,17 +13,10 @@ interface UseProductsReturn {
   totalPages: number;
 }
 
-export const useProducts = (params: ProductFilterQueryDto): UseProductsReturn => {
-  const {
-    query: searchQuery,
-    page,
-    limit = 16,
-    sortBy = 'id',
-    sortOrder = 'DESC',
-    categoryIds,
-    minPrice,
-    maxPrice,
-  } = params;
+export const useProducts = (
+  params: ProductFilterQueryDto
+): UseProductsReturn => {
+  const { page, limit = 16, sortBy = "id", sortOrder = "DESC" } = params;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
@@ -40,7 +32,6 @@ export const useProducts = (params: ProductFilterQueryDto): UseProductsReturn =>
     try {
       const response = await productService.getProducts({
         ...params,
-        ...(searchQuery && { title: searchQuery }), // Add search query as title filter
         page,
         limit,
         sortBy,
@@ -48,10 +39,10 @@ export const useProducts = (params: ProductFilterQueryDto): UseProductsReturn =>
       });
 
       if (response.success && response.data) {
-        setProducts(response.data.data || []);
-        setTotal(response.data.total || 0);
-        setCurrentPage(response.data.page || 1);
-        setTotalPages(response.data.totalPages || 0);
+        setProducts(response.data || []);
+        setTotal(response.pagination?.total || 0);
+        setCurrentPage(response.pagination?.page || 1);
+        setTotalPages(response.pagination?.totalPages || 0);
       } else {
         setError(response.message || "Failed to fetch products");
         setProducts([]);
@@ -68,16 +59,7 @@ export const useProducts = (params: ProductFilterQueryDto): UseProductsReturn =>
 
   useEffect(() => {
     fetchProducts();
-  }, [
-    categoryIds?.join(','),
-    minPrice,
-    maxPrice,
-    searchQuery,
-    page,
-    limit,
-    sortBy,
-    sortOrder
-  ]);
+  }, [page, limit, sortBy, sortOrder]);
 
   return {
     products,
