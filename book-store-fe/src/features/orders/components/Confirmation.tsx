@@ -84,7 +84,7 @@ export function OrderConfirmation1({}: OrderConfirmation1Props) {
     return (
       <section className="bg-background py-8 antialiased">
         <div className="mx-auto max-w-2xl px-4 2xl:px-0 flex justify-center items-center h-60">
-          <Spinner size="lg" />
+          <Spinner size = "lg" />
         </div>
       </section>
     );
