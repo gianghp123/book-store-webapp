@@ -10,6 +10,7 @@ export interface CreateProductDto {
 
 // Product filter query parameters
 export interface ProductFilterQueryDto {
+  query?: string;
   page?: number; // optional, default: 1
   limit?: number; // optional, default: 10
   title?: string;

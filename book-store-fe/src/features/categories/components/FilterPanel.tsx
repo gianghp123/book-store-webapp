@@ -14,16 +14,11 @@ import { dataProvider } from "@/provider/data-provider";
 import { ProductCategory } from "../dtos/response/category.dto";
 import { toast } from "sonner";
 
-export interface FilterState {
-  categories: string[];
-  minPrice: number;
-  maxPrice: number;
-  minRating: number;
-}
+import { ProductFilterQueryDto } from "@/features/products/dtos/request/product.dto";
 
 interface FilterPanelProps {
-  filters: FilterState;
-  onFiltersChange: (filters: FilterState) => void;
+  filters: ProductFilterQueryDto;
+  onFiltersChange: (filters: ProductFilterQueryDto) => void;
   onClose?: () => void;
   isMobile?: boolean;
 }
@@ -33,7 +28,6 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
   const [openSections, setOpenSections] = useState({
     categories: true,
     price: true,
-    rating: true,
   });
 
   const [apiCategories, setApiCategories] = useState<ProductCategory[]>([]);
@@ -72,12 +66,12 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
 
   const handleCategoryChange = (categoryId: string, checked: boolean) => {
     const newCategories = checked
-      ? [...filters.categories, categoryId]
-      : filters.categories.filter(id => id !== categoryId);
+      ? [...(filters.categoryIds || []), categoryId]
+      : (filters.categoryIds || []).filter(id => id !== categoryId);
 
     onFiltersChange({
       ...filters,
-      categories: newCategories,
+      categoryIds: newCategories,
     });
   };
 
@@ -97,33 +91,23 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
     });
   };
 
-  // --- HÀM XỬ LÝ SEARCH (TẠM THỜI) ---
-  const handlePriceSearch = () => {
-    console.log("Search button clicked with filters:", filters);
-    // Bạn sẽ thêm logic gọi API hoặc cập nhật state ở đây
-    // Ví dụ: onFiltersChange(filters); // Gọi lại hàm này để trigger ProductCatalogue cập nhật
+    const handlePriceSearch = () => {
+    onFiltersChange(filters); // Trigger ProductCatalogue to update with current filters
   };
-  // --- KẾT THÚC HÀM XỬ LÝ SEARCH ---
 
-  const handleRatingChange = (rating: number) => {
-    onFiltersChange({
-      ...filters,
-      minRating: rating,
-    });
-  };
+
 
   const clearAllFilters = () => {
     onFiltersChange({
-      categories: [],
+      categoryIds: [],
       minPrice: 0,
       maxPrice: 1000,
-      minRating: 0,
     });
   };
 
-  const filterCount = filters.categories.length +
-    (filters.minPrice > 0 || filters.maxPrice < 1000 ? 1 : 0) +
-    (filters.minRating > 0 ? 1 : 0);
+  const filterCount = (filters.categoryIds?.length || 0) +
+    (filters.minPrice && filters.minPrice > 0 ? 1 : 0) +
+    (filters.maxPrice && filters.maxPrice < 1000 ? 1 : 0);
 
   return (
     <Card className={`h-fit sticky top-20 ${isMobile ? 'w-full' : 'w-80'}`}>
@@ -162,7 +146,7 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
         >
           {/* ... Nội dung Categories giữ nguyên ... */}
           <CollapsibleTrigger asChild>
-             <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+             <Button variant="ghost" className="w-full justify-between h-auto">
                <span>Categories</span>
                <ChevronDown className={`h-4 w-4 transition-transform ${openSections.categories ? 'rotate-180' : ''}`} />
              </Button>
@@ -181,7 +165,7 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
                          <div className="flex items-center space-x-2">
                            <Checkbox
                              id={`cat-${category.id}`}
-                             checked={filters.categories.includes(category.id)}
+                             checked={(filters.categoryIds || []).includes(category.id)}
                              onCheckedChange={(checked) =>
                                handleCategoryChange(category.id, checked as boolean)
                              }
@@ -210,7 +194,7 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
           onOpenChange={() => toggleSection('price')}
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+            <Button variant="ghost" className="w-full justify-between h-auto">
               <span>Price Range</span>
               <ChevronDown className={`h-4 w-4 transition-transform ${openSections.price ? 'rotate-180' : ''}`} />
             </Button>
@@ -250,17 +234,14 @@ export function FilterPanel({ filters, onFiltersChange, onClose, isMobile = fals
                 </div>
               </div>
             </div>
-             {/* --- THÊM NÚT SEARCH VÀO ĐÂY --- */}
-            
-             {/* --- KẾT THÚC NÚT SEARCH --- */}
+             <Button onClick={handlePriceSearch} size="sm" className="w-full mt-2">
+              <Search className="mr-2 h-4 w-4" />
+              Search
+            </Button>
           </CollapsibleContent>
         </Collapsible>
 
         {/* Rating Section */}
-        <Button onClick={handlePriceSearch} size="sm" className="w-full mt-2">
-              <Search className="mr-2 h-4 w-4" />
-              Search
-            </Button>
       </CardContent>
     </Card>
   );

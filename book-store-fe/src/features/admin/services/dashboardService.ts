@@ -1,6 +1,6 @@
 // src/features/dashboard/services/dashboardService.ts
 import { apiFetch } from "@/lib/api-fetch";
-import { DashboardStatsResponse, SalesOverTimeResponse, SalesByCategoryResponse } from "@/features/dashboard/dtos/response/dashboard-response.dto";
+import { DashboardStatsResponse, SalesOverTimeResponse, SalesByCategoryResponse } from "@/features/admin/dtos/response/dashboard-response.dto";
 import { ServerResponseModel } from "@/lib/typedefs/server-response";
 
 export const dashboardService = {

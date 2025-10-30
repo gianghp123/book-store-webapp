@@ -9,6 +9,7 @@ import {
 import type { ClientGrpc } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { firstValueFrom } from 'rxjs';
+import { SearchType } from 'src/core/enums/search-type.enum';
 import {
   HybridBookRetrieverService,
   RetrieveRequest,
@@ -55,18 +56,23 @@ export class ProductService implements OnModuleInit {
     const {
       page = 1,
       limit = 10,
-      title,
+      query,
       categoryIds,
       minPrice,
       maxPrice,
       sortBy,
       sortOrder,
+      searchType,
     } = filterQuery;
     const offset = (page - 1) * limit;
 
+    if (searchType === SearchType.SMART && query) {
+      return this.hybridSearch({ query: query!, page, limit });
+    }
+
     const whereCondition: FindOptionsWhere<Product> = {};
-    if (title) {
-      whereCondition.title = Like(`%${title}%`);
+    if (query) {
+      whereCondition.title = Like(`%${query}%`);
     }
 
     const queryBuilder = this.productRepository

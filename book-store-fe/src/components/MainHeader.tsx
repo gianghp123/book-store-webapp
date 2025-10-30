@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import Link from "next/link";
+import { SearchBar } from "../features/search-bar/components/SearchBar";
 
 interface HeaderProps {
   cartItemsCount?: number;
@@ -67,13 +68,7 @@ export function MainHeader({
         </nav>
 
         {/* Search Bar - Hidden on small screens */}
-        <div className="hidden sm:flex relative max-w-sm flex-1 mx-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search products..."
-            className="pl-10 bg-input-background"
-          />
-        </div>
+        <SearchBar />
 
         {/* Actions */}
         <div className="flex items-center gap-2">

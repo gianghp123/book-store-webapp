@@ -2,21 +2,23 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsArray,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
   IsUUID,
 } from 'class-validator';
 import { PaginationQueryDto } from 'src/core/dto/pagination-query.dto';
+import { SearchType } from 'src/core/enums/search-type.enum';
 
 export class ProductFilterQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({
-    description: 'search by title',
+    description: 'search by query (title or description when hybrid search is enabled)',
     type: String,
   })
   @IsOptional()
   @IsString()
-  title?: string;
+  query?: string;
 
   @ApiPropertyOptional({
     description: 'filter by category ids',
@@ -44,4 +46,12 @@ export class ProductFilterQueryDto extends PaginationQueryDto {
   @Transform(({ value }) => parseFloat(value))
   @IsNumber()
   maxPrice?: number;
+
+  @ApiPropertyOptional({
+    description: 'search type',
+    enum: SearchType,
+  })
+  @IsOptional()
+  @IsEnum(SearchType)
+  searchType?: SearchType = SearchType.NORMAL;
 }
