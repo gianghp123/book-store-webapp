@@ -31,99 +31,81 @@ export class OrderService {
     private productRepository: Repository<Product>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async createOrder(
     userId: string,
     createOrderDto: CreateOrderDto,
   ): Promise<OrderResponseDto> {
-    // Find user
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException(`User with ID "${userId}" not found`);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    const cart = await this.cartRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['items', 'items.product'],
+    });
+
+    if (!createOrderDto.items?.length) {
+      throw new BadRequestException("Order must include at least one item.");
     }
 
-    // Get cart items if no specific items provided in DTO
-    let orderItems: OrderItem[] = [];
-    if (createOrderDto.items && createOrderDto.items.length > 0) {
-      // Handle "Buy now" scenario with specific items
-      for (const item of createOrderDto.items) {
-        const product = await this.productRepository.findOne({
-          where: { id: item.productId },
-        });
-        if (!product) {
-          throw new NotFoundException(
-            `Product with ID "${item.productId}" not found`,
-          );
-        }
-        orderItems.push(
-          this.orderItemRepository.create({
-            product,
-            price: product.price,
-          }),
-        );
-      }
-    } else {
-      // Handle cart checkout scenario
-      const cart = await this.cartRepository.findOne({
-        where: { user: { id: userId } },
-        relations: ['items', 'items.product'],
+    const existingOrderItems = await this.orderItemRepository.find({
+      where: { order: { user: { id: userId } } },
+      relations: ['product'],
+    });
+
+    const existedProductIds = new Set(existingOrderItems.map(i => i.product.id));
+
+    const orderItems: OrderItem[] = [];
+
+    for (const item of createOrderDto.items) {
+      const product = await this.productRepository.findOne({
+        where: { id: item.productId },
       });
 
-      if (!cart) {
-        throw new NotFoundException('Cart not found');
+      if (!product) {
+        throw new NotFoundException(`Product ${item.productId} not found`);
       }
 
-      if (!cart.items || cart.items.length === 0) {
-        throw new BadRequestException('Cart is empty');
+      if (existedProductIds.has(product.id)) {
+        throw new BadRequestException(
+          `Sản phẩm "${product.title}" đã nằm trong đơn hàng trước đó, không thể đặt lại.`
+        );
       }
 
-      orderItems = cart.items.map((item) =>
+      orderItems.push(
         this.orderItemRepository.create({
-          product: item.product,
-          price: item.product.price,
+          product,
+          price: product.price,
         }),
       );
     }
 
-    // Calculate total amount
-    const totalAmount = orderItems.reduce((sum, item) => sum + item.price, 0);
+    const totalAmount = orderItems.reduce((sum, i) => sum + i.price, 0);
 
-    // Create order
-    const newOrder = this.orderRepository.create({
+    const order = this.orderRepository.create({
       user,
       totalAmount,
-      status: 'Chờ xác nhận', // Pending confirmation
+      status: 'Success',
     });
-    const savedOrder = await this.orderRepository.save(newOrder);
+    await this.orderRepository.save(order);
 
-    // Create order items and update product stock
-    for (const item of orderItems) {
-      const orderItem = this.orderItemRepository.create({
-        order: savedOrder,
-        product: item.product,
-        price: item.price,
-      });
-      await this.orderItemRepository.save(orderItem);
+    orderItems.forEach(i => (i.order = order));
+    await this.orderItemRepository.save(orderItems);
 
-      // Update product sold count (assuming there's a number2 field that tracks sold items)
-      if (item.product['number2'] !== undefined) {
-        item.product['number2'] = (item.product['number2'] || 0) + 1;
-        await this.productRepository.save(item.product);
+    if (cart && cart.items?.length > 0) {
+      const productIds = orderItems.map(i => i.product.id);
+
+      const itemsToRemove = cart.items.filter(ci =>
+        productIds.includes(ci.product.id)
+      );
+
+      if (itemsToRemove.length > 0) {
+        await this.cartItemRepository.remove(itemsToRemove);
       }
     }
 
-    // Clear cart if creating from cart items
-    if (!createOrderDto.items || createOrderDto.items.length === 0) {
-      const cart = await this.cartRepository.findOne({
-        where: { user: { id: userId } },
-      });
-      if (cart) {
-        await this.cartItemRepository.delete({ cart: { id: cart.id } });
-      }
-    }
-
-    return OrderResponseDto.fromEntity(savedOrder);
+    return OrderResponseDto.fromEntity(order);
   }
 
   async getOrdersByUser(
@@ -133,13 +115,22 @@ export class OrderService {
     const { page = 1, limit = 10 } = paginationQuery;
     const offset = (page - 1) * limit;
 
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`User with ID "${userId}" not found`);
+    }
+
     const [orders, total] = await this.orderRepository.findAndCount({
       where: { user: { id: userId } },
-      relations: ['items', 'items.product', 'user'],
+      relations: ['items', 'items.product', 'items.product.book'],
       order: { orderDate: 'DESC' },
       skip: offset,
       take: limit,
     });
+
+    if (orders.length === 0) {
+      throw new NotFoundException('User has no orders');
+    }
 
     const orderResponseDtos = OrderResponseDto.fromEntities(orders);
 
@@ -154,6 +145,7 @@ export class OrderService {
 
     return paginatedOrdersDto;
   }
+
 
   async cancelOrder(cancelOrderDto: CancelOrderDto): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
@@ -212,4 +204,6 @@ export class OrderService {
 
     return paginatedOrdersDto;
   }
+
+
 }

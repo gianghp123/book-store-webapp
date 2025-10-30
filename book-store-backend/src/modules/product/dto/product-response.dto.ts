@@ -17,21 +17,27 @@ export class BookResponseDto {
 @AutoExpose()
 export class ProductResponseDto extends BaseResponseDto {
   id: string;
-  @Transform(({ value }) => capitalizeFirstLetter(value))
+
+  @Transform(({ value }) => value ? capitalizeFirstLetter(value) : "")
   title: string;
+
   description?: string;
-  @Type(() => BookResponseDto)
-  book: BookResponseDto;
+
+  @IsOptional()
+  @Transform(({ obj }) => obj.book?.imageUrl)
+  imageUrl?: string;
+
   price: number;
   rating: number;
   ratingCount: number;
   createdAt: Date;
   updatedAt: Date;
+
   @IsOptional()
   @Type(() => CategoryResponseDto)
   categories?: CategoryResponseDto[];
+
   @IsOptional()
   @Type(() => AuthorResponseDto)
   authors?: AuthorResponseDto[];
 }
-

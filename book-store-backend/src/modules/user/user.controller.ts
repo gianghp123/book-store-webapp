@@ -9,7 +9,7 @@ import { Public } from 'src/core/decorators/public.decorator';
 @ApiBearerAuth()
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -36,5 +36,12 @@ export class UserController {
     @Param('id') id: string,
   ): Promise<UserResponseDto> {
     return await this.userService.findOne(id);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get current user' })
+  async getMyUser(@Request() req): Promise<UserResponseDto> {
+    return await this.userService.findOne(req.user.id);
   }
 }

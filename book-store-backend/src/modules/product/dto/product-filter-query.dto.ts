@@ -25,6 +25,11 @@ export class ProductFilterQueryDto extends PaginationQueryDto {
     type: [String],
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return [value];
+    return [];
+  })
   @IsArray()
   @IsUUID(undefined, { each: true })
   categoryIds?: string[];

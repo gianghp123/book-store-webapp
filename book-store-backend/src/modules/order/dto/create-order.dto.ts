@@ -26,12 +26,4 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
-
-  @ApiProperty({ 
-    description: 'Cart ID to create order from',
-    type: String, 
-    example: 'uuid-of-cart' 
-  })
-  @IsUUID()
-  cartId: string;
 }

@@ -70,17 +70,13 @@ export class ProductService implements OnModuleInit {
       return this.hybridSearch({ query: query!, page, limit });
     }
 
-    const whereCondition: FindOptionsWhere<Product> = {};
-    if (query) {
-      whereCondition.title = Like(`%${query}%`);
-    }
-
     const queryBuilder = this.productRepository
       .createQueryBuilder('product')
-      .leftJoinAndSelect('product.book', 'book')
-      .leftJoin('book.categories', 'categories')
-      .where(whereCondition);
+      .leftJoinAndSelect('product.book', 'book');
 
+    if (title) {
+      queryBuilder.andWhere('product.title ILIKE :title', { title: `%${title}%` });
+    }
     if (minPrice !== undefined) {
       queryBuilder.andWhere('product.price >= :minPrice', { minPrice });
     }
@@ -89,9 +85,14 @@ export class ProductService implements OnModuleInit {
     }
 
     if (categoryIds && categoryIds.length > 0) {
-      queryBuilder.andWhere('book.categories.id IN (:...categoryIds)', {
-        categoryIds,
-      });
+      queryBuilder
+        .leftJoin('book.categories', 'categories')
+        .andWhere('categories.id IN (:...categoryIds)', { categoryIds })
+        .groupBy('product.id')
+        .addGroupBy('book.id')
+        .having('COUNT(DISTINCT categories.id) = :numCategories', {
+          numCategories: categoryIds.length,
+        });
     }
 
     if (sortBy) {
@@ -102,21 +103,36 @@ export class ProductService implements OnModuleInit {
       queryBuilder.orderBy('product.createdAt', 'DESC');
     }
 
-    const [products, total] = await queryBuilder
-      .skip(offset)
-      .take(limit)
-      .getManyAndCount();
+    let total = 0;
+    if (categoryIds && categoryIds.length > 0) {
+      const rawResults = await queryBuilder.getRawMany();
+      total = rawResults.length;
+    } else {
+      total = await this.productRepository.count({
+        where: title ? { title: Like(`%${title}%`) } : {},
+      });
+    }
+
+    const products = await queryBuilder
+      .offset(offset)
+      .limit(limit)
+      .getMany();
 
     const data = products.map((product) => {
-      // Transform product and include categories in the response
-      const productDto = ProductResponseDto.fromEntity(product);
-      // Add categories to the response from the book
-      if (product.book && product.book.categories) {
-        productDto.categories = product.book.categories.map((category) =>
-          CategoryResponseDto.fromEntity(category),
+      const dto = ProductResponseDto.fromEntity(product);
+
+      if (product.book) {
+        dto.imageUrl = product.book.imageUrl;
+        dto.fileUrl = undefined;
+      }
+
+      if (product.book?.categories) {
+        dto.categories = product.book.categories.map((c) =>
+          CategoryResponseDto.fromEntity(c),
         );
       }
-      return productDto;
+
+      return dto;
     });
 
     return {
@@ -129,6 +145,7 @@ export class ProductService implements OnModuleInit {
       },
     };
   }
+
 
   async findOne(id: string): Promise<ProductResponseDto> {
     const product = await this.productRepository.findOne({
@@ -145,19 +162,31 @@ export class ProductService implements OnModuleInit {
       throw new NotFoundException(`Product with ID "${id}" not found`);
     }
 
-    console.log(product);
+    const productExistOrder = await this.orderItemRepository.findOne({
+      where: {
+        product: { id },
+      }
+    })
 
     const productDto = ProductResponseDto.fromEntity(product);
-    // Add categories to the response from the book
+
+    if (product.book) {
+      productDto.imageUrl = product.book.imageUrl;
+
+      if (productExistOrder! || productExistOrder == null) {
+        productDto.fileUrl = undefined;
+      }
+    }
+
     if (product.book && product.book.categories) {
-      productDto.categories = product.book.categories.map((category) =>
-        CategoryResponseDto.fromEntity(category),
+      productDto.categories = product.book.categories.map(category =>
+        CategoryResponseDto.fromEntity(category)
       );
     }
 
     if (product.book && product.book.authors) {
-      productDto.authors = product.book.authors.map((author) =>
-        AuthorResponseDto.fromEntity(author),
+      productDto.authors = product.book.authors.map(author =>
+        AuthorResponseDto.fromEntity(author)
       );
     }
     return productDto;
@@ -266,7 +295,6 @@ export class ProductService implements OnModuleInit {
       authorIds,
     } = createProductDto;
 
-    // Create the product
     const product = this.productRepository.create({
       title,
       description,
@@ -274,7 +302,6 @@ export class ProductService implements OnModuleInit {
       price,
     });
 
-    // Handle authors if provided
     let bookCategories: Category[] = [];
     if (categoryIds && categoryIds.length > 0) {
       const categories = await this.categoryRepository.findByIds(categoryIds);
@@ -309,8 +336,8 @@ export class ProductService implements OnModuleInit {
     const productDto = ProductResponseDto.fromEntity(savedProduct);
     // Add categories to the response from the book
     if (savedProduct.book && savedProduct.book.categories) {
-      productDto.categories = savedProduct.book.categories.map((category) =>
-        CategoryResponseDto.fromEntity(category),
+      productDto.categories = savedProduct.book.categories.map(category =>
+        CategoryResponseDto.fromEntity(category)
       );
     }
     return productDto;
@@ -326,7 +353,6 @@ export class ProductService implements OnModuleInit {
       throw new NotFoundException(`Product with ID "${id}" not found`);
     }
 
-    // If the product has a book, remove it first
     if (product.book) {
       await this.bookRepository.remove(product.book);
     }

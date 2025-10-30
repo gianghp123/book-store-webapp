@@ -242,6 +242,49 @@ Base URL: `/cart`
     "createdAt": "date"
   }
   ```
+### Get User's Cart
+- **Method**: `GET`
+- **Endpoint**: `/cart/me`
+- **Description**: Retrieve the currently authenticated user's cart
+- **Authentication**: JWT Bearer Token (User token required)
+- **Status Code**: 200 OK
+
+#### Response
+- **Success Response**: 200 OK
+  ```json
+  {
+    "id": "string (UUID)",
+    "items": [
+      {
+        "id": "string (UUID)",
+        "product": {
+          "id": "string (UUID)",
+          "title": "string",
+          "description": "string (optional)",
+          "price": "number",
+          "rating": "number",
+          "ratingCount": "number",
+          "createdAt": "date",
+          "updatedAt": "date",
+          "categories": [
+            {
+              "id": "string (UUID)",
+              "name": "string"
+            }
+          ],
+          "authors": [
+            {
+              "id": "string (UUID)",
+              "name": "string"
+            }
+          ]
+        }
+      }
+    ],
+    "total": "number",
+    "createdAt": "date"
+  }
+  ```
 
 ### Add Item to Cart
 - **Method**: `POST`
@@ -540,8 +583,7 @@ Base URL: `/orders`
       {
         "productId": "string (UUID)"
       }
-    ],
-    "cartId": "string (UUID)"
+    ]
   }
   ```
 
@@ -575,7 +617,7 @@ Base URL: `/orders`
 
 ### Get User's Orders
 - **Method**: `GET`
-- **Endpoint**: `/orders`
+- **Endpoint**: `/orders/me`
 - **Description**: Retrieve orders for the authenticated user
 - **Authentication**: JWT Bearer Token (User token required)
 - **Status Code**: 200 OK
