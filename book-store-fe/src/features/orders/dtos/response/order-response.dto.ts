@@ -1,3 +1,5 @@
+import { User } from "@/features/users/dtos/response/user-response.dto";
+
 // Order product interface (simplified from cart product)
 export interface OrderProduct {
   id: string; // UUID
@@ -20,7 +22,7 @@ export interface OrderItem {
 // Base order interface
 export interface Order {
   id: string; // UUID
-  userId: string; // UUID
+  user: User;
   orderDate: string; // date
   totalAmount: number;
   status: string;

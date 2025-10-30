@@ -8,6 +8,13 @@ import { Transform } from 'class-transformer';
 import { capitalizeFirstLetter } from 'src/core/utils/string.util';
 
 @AutoExpose()
+export class BookResponseDto {
+  isbn?: string;
+  publisher?: string;
+  pagesCount?: number;
+}
+
+@AutoExpose()
 export class ProductResponseDto extends BaseResponseDto {
   id: string;
 
@@ -19,10 +26,6 @@ export class ProductResponseDto extends BaseResponseDto {
   @IsOptional()
   @Transform(({ obj }) => obj.book?.imageUrl)
   imageUrl?: string;
-
-  @IsOptional()
-  @Transform(({ obj }) => obj.book?.fileUrl)
-  fileUrl?: string;
 
   price: number;
   rating: number;

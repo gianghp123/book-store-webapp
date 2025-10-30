@@ -5,6 +5,7 @@ import { AutoExpose } from 'src/core/decorators/auto-expose.decorator';
 import { Transform, Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 import { capitalizeFirstLetter } from 'src/core/utils/string.util';
+import { UserResponseDto } from 'src/modules/user/dto/user-response.dto';
 
 @AutoExpose()
 class OrderItemResponseDto extends BaseResponseDto {
@@ -41,7 +42,7 @@ export class OrderItemResponseDtoWithProduct extends OrderItemResponseDto {
 @AutoExpose()
 export class OrderResponseDto extends BaseResponseDto {
   id: string;
-  userId: string;
+  user: UserResponseDto;
   orderDate: Date;
   totalAmount: number;
   status: string;

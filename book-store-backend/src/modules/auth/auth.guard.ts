@@ -28,8 +28,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
 
-    console.log( '----------------------',requiredRoles)
-
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }

@@ -4,6 +4,7 @@ import { Roles } from 'src/core/decorators/role.decorator';
 import { Role } from 'src/core/enums/role.enum';
 import { UserService } from './user.service';
 import { UserResponseDto, PaginatedUsersDto } from './dto/user-response.dto';
+import { Public } from 'src/core/decorators/public.decorator';
 
 @ApiBearerAuth()
 @Controller('users')
@@ -12,7 +13,8 @@ export class UserController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.ADMIN)
+  // @Roles(Role.ADMIN)
+  @Public()
   @ApiOperation({ summary: 'Get all users (Admin only)' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limit per page' })

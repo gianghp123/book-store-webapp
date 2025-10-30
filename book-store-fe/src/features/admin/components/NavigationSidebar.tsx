@@ -31,8 +31,7 @@ export function NavigationSidebar() {
       icon: BookOpen,
       children: [
         { id: "products", label: "Products", page: "products" },
-        { id: "categories", label: "Categories", page: "categories" },
-        { id: "authors", label: "Authors", page: "authors" },
+        { id: "categories", label: "Categories", page: "categories" }
       ],
     },
     {

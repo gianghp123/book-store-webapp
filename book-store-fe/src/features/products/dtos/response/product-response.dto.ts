@@ -1,13 +1,15 @@
-// Category interface for products
-export interface ProductCategory {
-  id: string; // UUID
-  name: string;
-}
+import { ProductCategory } from "@/features/categories/dtos/response/category.dto";
 
 // Author interface for products
 export interface ProductAuthor {
   id: string; // UUID
   name: string;
+}
+
+export interface ProductBook {
+  isbn?: string;
+  publisher?: string;
+  pagesCount?: number;
 }
 
 // Product response interface
@@ -19,6 +21,7 @@ export interface Product {
   price: number;
   rating: number;
   ratingCount: number;
+  book?: ProductBook;
   createdAt: string; // date
   updatedAt: string; // date
   categories: ProductCategory[];
