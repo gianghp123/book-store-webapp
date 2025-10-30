@@ -1,10 +1,12 @@
+// src/app/(main)/products/[slug]/page.tsx
 import { ProductDetail } from "@/features/products/components/ProductDetail";
 import {
   Product,
   ProductReview,
 } from "@/features/products/dtos/response/product-response.dto";
 import { dataProvider } from "@/provider/data-provider";
-
+import { cartService } from "@/features/carts/services/cartService"; // Import cart service
+import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto"; // Import cart type
 
 export const mockReviews: ProductReview[] = [
     {
@@ -49,13 +51,39 @@ export default async function ProductDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const { slug } = await params
-  const { data } = await dataProvider().getOne<Product>({resource: 'products', id: slug})
+  const { slug } = await params;
+  let isAlreadyInCart = false;
+
+  // 1. Fetch sản phẩm
+  const { data: productData } = await dataProvider().getOne<Product>({
+    resource: 'products', 
+    id: slug
+  });
   
+  // 2. Fetch giỏ hàng của user (nếu đã đăng nhập)
+  try {
+    // Gọi service getCart (API /cart/me)
+    const cartResponse = await cartService.getCart();
+
+    if (cartResponse.success && cartResponse.data?.items) {
+      // 3. Kiểm tra xem product slug có nằm trong danh sách items của giỏ hàng không
+      // (Dùng productId vì DTO giỏ hàng đã được làm phẳng)
+      isAlreadyInCart = cartResponse.data.items.some(
+        (item) => item.productId === slug
+      );
+    }
+    // Nếu lỗi (vd: 401 chưa đăng nhập), isAlreadyInCart sẽ giữ nguyên là false
+  } catch (error) {
+    console.warn("Could not fetch cart status (user might not be logged in).", error);
+    isAlreadyInCart = false; // Đảm bảo an toàn
+  }
+
+  // 4. Truyền trạng thái (isAlreadyInCart) xuống Client Component
   return (
     <ProductDetail
-      product={data}
-      reviews={data.reviews || mockReviews || []}
+      product={productData}
+      reviews={productData.reviews || mockReviews || []}
+      isAlreadyInCart={isAlreadyInCart} // <-- Prop mới
     />
   );
 }

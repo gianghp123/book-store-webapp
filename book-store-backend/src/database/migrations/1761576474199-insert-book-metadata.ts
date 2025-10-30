@@ -12,7 +12,8 @@ export class UpdateBookMetadata1761576474199 implements MigrationInterface {
     const batchSize = 5000;
     let totalUpdated = 0;
 
-    await queryRunner.startTransaction();
+    // KHÔNG GỌI startTransaction() Ở ĐÂY
+
     try {
       for (let i = 0; i < records.length; i += batchSize) {
         const batch = records.slice(i, i + batchSize);
@@ -47,16 +48,18 @@ export class UpdateBookMetadata1761576474199 implements MigrationInterface {
         AND b.image_url = v.image_url;
         `;
 
+        // Chỉ cần chạy query trực tiếp
         await queryRunner.query(sql);
         totalUpdated += batch.length;
         console.log(`✅ Updated ${totalUpdated} rows so far...`);
       }
 
-      await queryRunner.commitTransaction();
+      // KHÔNG GỌI commitTransaction() Ở ĐÂY
       console.log(`✅ Migration complete — ${totalUpdated} total records processed.`);
     } catch (err) {
-      await queryRunner.rollbackTransaction();
-      console.error('❌ Migration failed, rolled back.', err);
+      // KHÔNG GỌI rollbackTransaction() Ở ĐÂY
+      console.error('❌ Migration failed, TypeORM will rollback.', err);
+      // Ném lỗi ra ngoài để TypeORM biết và tự động rollback
       throw err;
     }
   }

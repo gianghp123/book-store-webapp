@@ -1,4 +1,4 @@
-// Thêm 'use client' ở đầu tệp để sử dụng hook
+// src/features/carts/components/Cart.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -8,248 +8,102 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { CartResponse } from "../dtos/response/cart-response.dto";
+import { CartResponse, CartItem } from "../dtos/response/cart-response.dto";
 import Link from "next/link";
-import { useState } from "react";
-// Import component 'CartPagination'
-import { CartPagination } from "./CartPagination"; //
+import { useState, useMemo } from "react";
+import { CartPagination } from "./CartPagination";
+import { ImageWithFallback } from "@/components/ImageWithFallBack";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
+import { cartService } from "../services/cartService";
 
+// *** THÊM CÁC COMPONENT DIALOG ĐÃ UPLOAD ***
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose, // Dùng để đóng Dialog
+} from "@/components/ui/dialog";
+
+// Định nghĩa lại Props để chấp nhận cartResponse có thể là null
 interface Props {
-  cartResponse: CartResponse;
+  cartResponse: CartResponse | null; // Có thể null nếu fetch lỗi hoặc chưa có giỏ hàng
   imageFallbackUrl: string;
 }
 
-const defaultProps: Props = {
-  cartResponse: {
-    id: "1",
-    items: [
-      {
-        id: "1",
-        product: {
-          id: "1",
-          title: "The Art of Clean Code: A Practical Guide",
-          price: 1499,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          createdAt: "10/10/2023",
-          updatedAt: "20/10/2023",
-          categories: [
-            { id: "cat-1", name: "Programming" },
-            { id: "cat-2", name: "Software Engineering" },
-            { id: "cat-3", name: "Web Development" },
-            { id: "cat-4", name: "Software Engineering" },
-            { id: "cat-5", name: "Programming" },
-            { id: "cat-6", name: "Software Engineering" },
-            { id: "cat-7", name: "Programming" },
-            { id: "cat-8", name: "Software Engineering" },
-          ],
-          authors: [{ id: "auth-1", name: "Robert C. Martin" }],
-        },
-      },
-      {
-        id: "2",
-        product: {
-          id: "2",
-          title:
-            "A comprehensive introduction to modern JavaScript programming.",
-          price: 598,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description: "",
-          createdAt: "10/10/2023",
-          updatedAt: "20/10/2023",
-          categories: [
-            { id: "cat-1", name: "Programming" },
-            { id: "cat-3", name: "Web Development" },
-          ],
-          authors: [{ id: "auth-2", name: "Sarah Chen" }],
-        },
-      },
-      {
-        id: "3",
-        product: {
-          id: "3",
-          title: "Database Design for Mere Mortals",
-          price: 850,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description: "A hands-on guide to relational database design.",
-          createdAt: "11/11/2023",
-          updatedAt: "21/11/2023",
-          categories: [{ id: "cat-9", name: "Database" }],
-          authors: [{ id: "auth-3", name: "Michael J. Hernandez" }],
-        },
-      },
-      {
-        id: "4",
-        product: {
-          id: "4",
-          title: "Designing Data-Intensive Applications",
-          price: 1200,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description:
-            "The Big Ideas Behind Reliable, Scalable, and Maintainable Systems.",
-          createdAt: "12/12/2023",
-          updatedAt: "22/12/2023",
-          categories: [
-            { id: "cat-10", name: "System Design" },
-            { id: "cat-9", name: "Database" },
-          ],
-          authors: [{ id: "auth-4", name: "Martin Kleppmann" }],
-        },
-      },
-      {
-        id: "5",
-        product: {
-          id: "5",
-          title: "Grokking Algorithms",
-          price: 750,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description:
-            "An illustrated guide for programmers and other curious people.",
-          createdAt: "01/01/2024",
-          updatedAt: "02/01/2024",
-          categories: [
-            { id: "cat-1", name: "Programming" },
-            { id: "cat-11", name: "Algorithms" },
-          ],
-          authors: [{ id: "auth-5", name: "Aditya Bhargava" }],
-        },
-      },
-      {
-        id: "6",
-        product: {
-          id: "6",
-          title: "The Pragmatic Programmer: Your Journey To Mastery",
-          price: 1100,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description: "20th Anniversary Edition.",
-          createdAt: "02/02/2024",
-          updatedAt: "03/02/2024",
-          categories: [
-            { id: "cat-2", name: "Software Engineering" },
-            { id: "cat-1", name: "Programming" },
-          ],
-          authors: [
-            { id: "auth-6", name: "David Thomas" },
-            { id: "auth-7", name: "Andrew Hunt" },
-          ],
-        },
-      },
-      {
-        id: "7",
-        product: {
-          id: "7",
-          title: "Effective Java",
-          price: 950,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description: "3rd Edition.",
-          createdAt: "03/03/2024",
-          updatedAt: "04/03/2024",
-          categories: [
-            { id: "cat-1", name: "Programming" },
-            { id: "cat-12", name: "Java" },
-          ],
-          authors: [{ id: "auth-8", name: "Joshua Bloch" }],
-        },
-      },
-      {
-        id: "8",
-        product: {
-          id: "8",
-          title: "Clean Architecture",
-          price: 1050,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description:
-            "A Craftsman's Guide to Software Structure and Design.",
-          createdAt: "04/04/2024",
-          updatedAt: "05/04/2024",
-          categories: [{ id: "cat-2", name: "Software Engineering" }],
-          authors: [{ id: "auth-1", name: "Robert C. Martin" }],
-        },
-      },
-      {
-        id: "9",
-        product: {
-          id: "9",
-          title: "Introduction to Algorithms (CLRS)",
-          price: 1800,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description: "The standard textbook for algorithm courses.",
-          createdAt: "05/05/2024",
-          updatedAt: "06/05/2024",
-          categories: [{ id: "cat-11", name: "Algorithms" }],
-          authors: [
-            { id: "auth-9", name: "Thomas H. Cormen" },
-            { id: "auth-10", name: "Charles E. Leiserson" },
-          ],
-        },
-      },
-      {
-        id: "10",
-        product: {
-          id: "10",
-          title: "Domain-Driven Design",
-          price: 1300,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description: "Tackling Complexity in the Heart of Software.",
-          createdAt: "06/06/2024",
-          updatedAt: "07/06/2024",
-          categories: [
-            { id: "cat-2", name: "Software Engineering" },
-            { id: "cat-10", name: "System Design" },
-          ],
-          authors: [{ id: "auth-11", name: "Eric Evans" }],
-        },
-      },
-      {
-        id: "11",
-        product: {
-          id: "11",
-          title: "Refactoring: Improving the Design of Existing Code",
-          price: 990,
-          image:
-            "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-          description: "Key techniques to improve code maintainability.",
-          createdAt: "07/07/2024",
-          updatedAt: "08/07/2024",
-          categories: [{ id: "cat-2", name: "Software Engineering" }],
-          authors: [{ id: "auth-12", name: "Martin Fowler" }],
-        },
-      },
-    ],
-    total: 12087,
-    createdAt: "",
-  },
-  imageFallbackUrl:
-    "https://imagedelivery.net/Kpcbofvpelk1jdjXmWIr5w/15656e6c-1315-435d-fa59-ec0ce2ac0700/public",
-};
-
+// Đây là component con xử lý logic hiển thị
 const ShoppingCart1Page = ({ cartResponse, imageFallbackUrl }: Props) => {
-  // Giữ toàn bộ state và logic tính toán ở component cha
+  const [items, setItems] = useState(cartResponse?.items || []);
   const [current, setCurrent] = useState(1);
   const itemsPerPage = 3;
-  const totalItems = cartResponse.items.length;
+
+  // *** THÊM STATE CHO DIALOG XÁC NHẬN ***
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // State để lưu item đang chuẩn bị xóa
+  const [itemToConfirmDelete, setItemToConfirmDelete] = useState<CartItem | null>(
+    null
+  );
+  // State loading, đổi tên cho rõ nghĩa
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Tính toán dựa trên 'items' trong state
+  const totalItems = items.length;
   const pageCount = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (current - 1) * itemsPerPage;
   const endIndex = current * itemsPerPage;
-  const currentItems = cartResponse.items.slice(startIndex, endIndex);
 
-  const subtotal = cartResponse.items.reduce(
-    (acc, item) => acc + item.product.price,
-    0
-  );
+  const currentItems = useMemo(() => {
+    return items.slice(startIndex, endIndex);
+  }, [items, startIndex, endIndex]);
+
+  const subtotal = useMemo(() => {
+    return items.reduce(
+      (acc, item) => acc + (parseFloat(item.price as any) || 0),
+      0
+    );
+  }, [items]);
+  // *** KẾT THÚC CẬP NHẬT STATE ***
 
   const handlePageChange = (page: number) => setCurrent(page);
   const handlePrevious = () => setCurrent((p) => Math.max(p - 1, 1));
   const handleNext = () => setCurrent((p) => Math.min(p + 1, pageCount));
+
+  // Hàm này được gọi khi nhấn nút 'Trash2'
+  const handleOpenConfirm = (item: CartItem) => {
+    setItemToConfirmDelete(item);
+    setIsConfirmOpen(true);
+  };
+
+  // Hàm này được gọi khi nhấn nút "Xóa" TRONG DIALOG
+  const handleConfirmDelete = async () => {
+    if (!itemToConfirmDelete) return;
+
+    const { productId } = itemToConfirmDelete;
+    setIsDeleting(true);
+
+    try {
+      const response = await cartService.removeItemFromCart({ productId });
+
+      if (response.success) {
+        toast.success("Đã xóa sản phẩm khỏi giỏ hàng.");
+        // Cập nhật UI bằng cách xóa item khỏi state
+        setItems((currentItems) =>
+          currentItems.filter((item) => item.productId !== productId)
+        );
+        setIsConfirmOpen(false); // Đóng dialog
+        setItemToConfirmDelete(null); // Reset item
+      } else {
+        toast.error(response.message || "Xóa thất bại, vui lòng thử lại.");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Đã xảy ra lỗi.");
+    } finally {
+      setIsDeleting(false); // Hoàn tất, reset trạng thái loading
+    }
+  };
 
   return (
     <div>
@@ -258,50 +112,80 @@ const ShoppingCart1Page = ({ cartResponse, imageFallbackUrl }: Props) => {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <div className="space-y-4 min-h-[416px]">
-            {currentItems.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="flex gap-4 p-4">
-                  <div className="relative h-24 w-24">
-                    <Image
-                      src={item.product.image || imageFallbackUrl}
-                      alt={item.product.title}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between py-1">
-                    <div>
-                      <h3 className="font-medium">{item.product.title}</h3>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {item.product.authors.map((author) => (
-                          <Badge key={author.id} variant="outline">
-                            {author.name}
-                          </Badge>
-                        ))}
-                        {item.product.categories.map((category) => (
-                          <Badge key={category.id} variant="secondary">
-                            {category.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground pt-2">
-                      Ngày tạo: {item.product.createdAt}
-                    </p>
-                  </div>
-                  
-                  <div className="text-right flex flex-col justify-between">
-                    <span className="font-bold text-lg">
-                      ${item.product.price}
-                    </span>
-                    <Button variant="ghost" size="sm" className="relative">
-                      <Trash2 className="size-6 text-red-500" />
-                    </Button>
-                  </div>
+            {totalItems === 0 ? (
+              <Card>
+                <CardContent className="p-10 text-center text-muted-foreground">
+                  Your shopping cart is empty.
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              currentItems.map((item) => (
+                <Card key={item.id}>
+                  <CardContent className="flex gap-4 p-4">
+                    <div className="relative h-24 w-24">
+                      <ImageWithFallback
+                        src={item.imageUrl || imageFallbackUrl}
+                        alt={item.title}
+                        fill
+                        className="object-contain"
+                        fallbackSrc={imageFallbackUrl}
+                        unoptimized={true}
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between py-1">
+                      <div>
+                        <Link href={`/products/${item.productId}`}>
+                          <h3 className="font-medium text-lg hover:text-primary transition-colors cursor-pointer">
+                            {item.title}
+                          </h3>
+                        </Link>
+
+                        {item.authors && item.authors.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {item.authors.map((author) => (
+                              <Badge key={author.id} variant="outline">
+                                {author.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        {item.categories && item.categories.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {item.categories.map((category) => (
+                              <Badge key={category.id} variant="secondary">
+                                {category.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground pt-2">
+                        Ngày tạo: {new Date(item.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div className="text-right flex flex-col justify-between">
+                      <span className="font-bold text-lg">
+                        ${(parseFloat(item.price as any) || 0).toFixed(2)}
+                      </span>
+
+                      {/* *** CẬP NHẬT NÚT XÓA: Mở Dialog *** */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="relative"
+                        onClick={() => handleOpenConfirm(item)} // Mở dialog
+                        disabled={isDeleting} // Vô hiệu hóa nếu đang xóa
+                      >
+                        <Trash2 className="size-6 text-red-500" />
+                      </Button>
+                      {/* *** KẾT THÚC CẬP NHẬT NÚT XÓA *** */}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
 
           {pageCount > 1 && (
@@ -311,12 +195,12 @@ const ShoppingCart1Page = ({ cartResponse, imageFallbackUrl }: Props) => {
               onPageChange={handlePageChange}
               onPrevious={handlePrevious}
               onNext={handleNext}
-              className="justify-start ml-55" // Giữ nguyên class 'ml-55' của bạn
+              className="justify-start ml-55"
             />
           )}
         </div>
 
-        {/* Cột phải: Order summary (Không thay đổi) */}
+        {/* Cột phải: Order summary */}
         <div className="space-y-6">
           <Card>
             <CardContent className="p-4">
@@ -324,20 +208,24 @@ const ShoppingCart1Page = ({ cartResponse, imageFallbackUrl }: Props) => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Original price</span>
-                  <span>${subtotal}</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-destructive">
                   <span>Discount</span>
-                  <span>-$0</span>
+                  <span>-$0.00</span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span>${subtotal}</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
               </div>
               <Link href="/payment">
-                <Button className="mt-4 w-full" size="lg">
+                <Button
+                  className="mt-4 w-full"
+                  size="lg"
+                  disabled={totalItems === 0}
+                >
                   Proceed to Payment
                 </Button>
               </Link>
@@ -363,12 +251,46 @@ const ShoppingCart1Page = ({ cartResponse, imageFallbackUrl }: Props) => {
           </Card>
         </div>
       </div>
+
+      {/* *** THÊM DIALOG XÁC NHẬN *** */}
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn xóa
+              {/* Hiển thị tên sách đang định xóa */}
+              <span className="font-bold"> "{itemToConfirmDelete?.title}" </span>
+              khỏi giỏ hàng không?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            {/* Nút Hủy (dùng DialogClose) */}
+            <DialogClose asChild>
+              <Button variant="outline" onClick={() => setItemToConfirmDelete(null)}>
+                Hủy
+              </Button>
+            </DialogClose>
+            {/* Nút Xóa (gọi API) */}
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete} // Gọi hàm xác nhận xóa
+              disabled={isDeleting} // Vô hiệu hóa khi đang tải
+            >
+              {isDeleting ? <Spinner className="mr-2" /> : "Xóa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* *** KẾT THÚC DIALOG *** */}
     </div>
   );
 };
 
-const ShoppingCart1 = () => {
-  return <ShoppingCart1Page {...defaultProps} />;
+// Component <ShoppingCart1> giờ chỉ là wrapper nhận props
+// và truyền chúng xuống <ShoppingCart1Page>
+const ShoppingCart1 = (props: Props) => {
+  return <ShoppingCart1Page {...props} />;
 };
 
 export { ShoppingCart1 };

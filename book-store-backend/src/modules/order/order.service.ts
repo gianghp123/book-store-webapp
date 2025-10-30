@@ -1,3 +1,4 @@
+// src/modules/order/order.service.ts
 import {
   BadRequestException,
   Injectable,
@@ -73,21 +74,28 @@ export class OrderService {
         );
       }
 
+      // *** BẮT ĐẦU SỬA LỖI ***
+      // Ép kiểu product.price (string) thành Number
+      const itemPrice = Number(product.price);
+      
       orderItems.push(
         this.orderItemRepository.create({
           product,
-          price: product.price,
+          price: itemPrice, // <-- Sử dụng giá đã ép kiểu
         }),
       );
+      // *** KẾT THÚC SỬA LỖI ***
     }
 
+    // Bây giờ i.price đã là Number, phép tính tổng sẽ đúng
     const totalAmount = orderItems.reduce((sum, i) => sum + i.price, 0);
 
     const order = this.orderRepository.create({
       user,
-      totalAmount,
+      totalAmount, // totalAmount bây giờ là Number
       status: 'Success',
     });
+    // Dòng này (trước đây là 92) sẽ chạy đúng
     await this.orderRepository.save(order);
 
     orderItems.forEach(i => (i.order = order));
@@ -105,7 +113,22 @@ export class OrderService {
       }
     }
 
-    return OrderResponseDto.fromEntity(order);
+    // Tải lại đơn hàng để có 'items' và 'user'
+    const completeOrder = await this.orderRepository.findOne({
+      where: { id: order.id },
+      relations: [
+        'items', 
+        'items.product', 
+        'items.product.book', 
+        'user'
+      ],
+    });
+
+    if (!completeOrder) {
+      throw new NotFoundException('Đơn hàng đã được tạo nhưng không thể tải lại.');
+    }
+
+    return OrderResponseDto.fromEntity(completeOrder);
   }
 
   async getOrdersByUser(
@@ -202,8 +225,6 @@ export class OrderService {
       totalPages: Math.ceil(total / limit),
     };
 
-    return paginatedOrdersDto;
+    return paginatedOrdersDto;  
   }
-
-
 }
