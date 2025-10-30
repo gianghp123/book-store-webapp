@@ -11,7 +11,7 @@ import { capitalizeFirstLetter } from 'src/core/utils/string.util';
 export class ProductResponseDto extends BaseResponseDto {
   id: string;
 
-  @Transform(({ value }) => capitalizeFirstLetter(value))
+  @Transform(({ value }) => value ? capitalizeFirstLetter(value) : "")
   title: string;
 
   description?: string;

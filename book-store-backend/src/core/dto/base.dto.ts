@@ -5,12 +5,11 @@ import {
 } from 'class-transformer';
 
 export abstract class BaseResponseDto {
-  static fromEntity<T, E>(
-    this: new () => T,
+  static fromEntity<E>(
+    this: new () => any,
     entity: E,
     opts?: ClassTransformOptions,
-  ): T {
-    // convert class instance -> plain object first
+  ) {
     const plain = instanceToPlain(entity);
     return plainToInstance(this, plain, {
       excludeExtraneousValues: true,

@@ -33,6 +33,12 @@ class OrderItemResponseDto extends BaseResponseDto {
 }
 
 @AutoExpose()
+export class OrderItemResponseDtoWithProduct extends OrderItemResponseDto {
+  @Type(() => OrderItemResponseDto)
+  product: ProductResponseDto;
+}
+
+@AutoExpose()
 export class OrderResponseDto extends BaseResponseDto {
   id: string;
   userId: string;

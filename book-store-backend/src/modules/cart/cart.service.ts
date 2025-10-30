@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { Product } from '../product/entities/product.entity';
 import { User } from '../user/entities/user.entity';
 import { AddToCartDto } from './dto/add-to-cart.dto';
-import { CartItemResponseDto, CartResponseDto } from './dto/cart-response.dto';
+import { CartItemResponseDto, CartResponseDto, CartItemResponseDtoWithProduct } from './dto/cart-response.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { CartItem } from './entities/cart-item.entity';
 import { Cart } from './entities/cart.entity';

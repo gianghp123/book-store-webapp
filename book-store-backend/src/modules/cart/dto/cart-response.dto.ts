@@ -3,6 +3,7 @@ import { AutoExpose } from 'src/core/decorators/auto-expose.decorator';
 import { Transform, Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 import { capitalizeFirstLetter } from 'src/core/utils/string.util';
+import { ProductResponseDto } from 'src/modules/product/dto/product-response.dto';
 
 @AutoExpose()
 export class CartItemResponseDto extends BaseResponseDto {
@@ -32,12 +33,27 @@ export class CartItemResponseDto extends BaseResponseDto {
 }
 
 @AutoExpose()
+export class CartItemResponseDtoWithProduct extends BaseResponseDto {
+  @Type(() => ProductResponseDto)
+  product: ProductResponseDto;
+}
+
+@AutoExpose()
 export class CartResponseDto extends BaseResponseDto {
   id: string;
 
-  @Type(() => CartItemResponseDto)
-  items: CartItemResponseDto[];
+  @Type(() => ProductResponseDto)
+  items: ProductResponseDto[];
 
-  total: number;
   createdAt: Date;
+
+  static override fromEntity(cart: any) {
+    const plain = {
+      ...cart,
+      items: cart.items?.map((i) => i.product) ?? [],
+    };
+
+    return super.fromEntity(plain);
+  }
 }
+
