@@ -38,91 +38,75 @@ export class OrderService {
     createOrderDto: CreateOrderDto,
   ): Promise<OrderResponseDto> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException(`User with ID "${userId}" not found`);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    const cart = await this.cartRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['items', 'items.product'],
+    });
+
+    if (!createOrderDto.items?.length) {
+      throw new BadRequestException("Order must include at least one item.");
     }
 
-    let orderItems: OrderItem[] = [];
-    let isFromCart = false;
-    let cart: Cart | null = null;
+    const existingOrderItems = await this.orderItemRepository.find({
+      where: { order: { user: { id: userId } } },
+      relations: ['product'],
+    });
 
-    if (createOrderDto.items && createOrderDto.items.length > 0) {
-      for (const item of createOrderDto.items) {
-        const product = await this.productRepository.findOne({
-          where: { id: item.productId },
-          relations: ['book'],
-        });
+    const existedProductIds = new Set(existingOrderItems.map(i => i.product.id));
 
-        if (!product) {
-          throw new NotFoundException(`Product with ID "${item.productId}" not found`);
-        }
+    const orderItems: OrderItem[] = [];
 
-        orderItems.push(
-          this.orderItemRepository.create({
-            product,
-            price: product.price,
-          }),
-        );
-      }
-    } else {
-      isFromCart = true;
-
-      cart = await this.cartRepository.findOne({
-        where: { user: { id: userId } },
-        relations: ['items', 'items.product'],
+    for (const item of createOrderDto.items) {
+      const product = await this.productRepository.findOne({
+        where: { id: item.productId },
       });
 
-      if (!cart) throw new NotFoundException('Cart not found');
-      if (!cart.items || cart.items.length === 0)
-        throw new BadRequestException('Cart is empty');
+      if (!product) {
+        throw new NotFoundException(`Product ${item.productId} not found`);
+      }
 
-      orderItems = cart.items.map((item) =>
+      if (existedProductIds.has(product.id)) {
+        throw new BadRequestException(
+          `Sản phẩm "${product.title}" đã nằm trong đơn hàng trước đó, không thể đặt lại.`
+        );
+      }
+
+      orderItems.push(
         this.orderItemRepository.create({
-          product: item.product,
-          price: item.product.price,
+          product,
+          price: product.price,
         }),
       );
     }
 
-    const totalAmount = orderItems.reduce((sum, item) => sum + item.price, 0);
+    const totalAmount = orderItems.reduce((sum, i) => sum + i.price, 0);
 
-    const newOrder = this.orderRepository.create({
+    const order = this.orderRepository.create({
       user,
       totalAmount,
       status: 'Success',
     });
-    const savedOrder = await this.orderRepository.save(newOrder);
+    await this.orderRepository.save(order);
 
-    for (const item of orderItems) {
-      await this.orderItemRepository.save({
-        order: savedOrder,
-        product: item.product,
-        price: item.price,
-      });
-    }
+    orderItems.forEach(i => (i.order = order));
+    await this.orderItemRepository.save(orderItems);
 
-    console.log(isFromCart, cart)
+    if (cart && cart.items?.length > 0) {
+      const productIds = orderItems.map(i => i.product.id);
 
-    if (isFromCart && cart) {
-      for (const orderItem of orderItems) {
-        console.log('OrderItem:', orderItem.product.id);
-        const cartItem = await this.cartItemRepository.findOne({
-          where: {
-            product: { id: orderItem.product.id },
-            cart: { id: cart.id },
-          },
-        });
+      const itemsToRemove = cart.items.filter(ci =>
+        productIds.includes(ci.product.id)
+      );
 
-        if (cartItem) {
-          await this.cartItemRepository.remove(cartItem);
-        }
+      if (itemsToRemove.length > 0) {
+        await this.cartItemRepository.remove(itemsToRemove);
       }
     }
 
-    return OrderResponseDto.fromEntity(savedOrder);
+    return OrderResponseDto.fromEntity(order);
   }
-
-
 
   async getOrdersByUser(
     userId: string,

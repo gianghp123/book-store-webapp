@@ -34,6 +34,7 @@ export class CartItemResponseDto extends BaseResponseDto {
 
 @AutoExpose()
 export class CartItemResponseDtoWithProduct extends BaseResponseDto {
+  id: string;
   @Type(() => ProductResponseDto)
   product: ProductResponseDto;
 }
@@ -42,18 +43,9 @@ export class CartItemResponseDtoWithProduct extends BaseResponseDto {
 export class CartResponseDto extends BaseResponseDto {
   id: string;
 
-  @Type(() => ProductResponseDto)
-  items: ProductResponseDto[];
+  @Type(() => CartItemResponseDtoWithProduct)
+  items: CartItemResponseDtoWithProduct[];
 
   createdAt: Date;
-
-  static override fromEntity(cart: any) {
-    const plain = {
-      ...cart,
-      items: cart.items?.map((i) => i.product) ?? [],
-    };
-
-    return super.fromEntity(plain);
-  }
 }
 
