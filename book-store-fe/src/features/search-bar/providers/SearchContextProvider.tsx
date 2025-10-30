@@ -1,5 +1,6 @@
-import { createContext, useContext, ReactNode, useState } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { SearchType } from "@/lib/constants/enums";
+import { useSearchBar } from "../hooks/useSearchBar";
 
 interface SearchContextType {
   searchQuery: string;
@@ -16,18 +17,7 @@ interface SearchContextProviderProps {
 }
 
 export const SearchContextProvider = ({ children }: SearchContextProviderProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchType, setSearchType] = useState<SearchType>(SearchType.NORMAL);
-
-  const handleSearch = (query?: string, type?: SearchType) => {
-    const actualQuery = query || searchQuery;
-    const actualType = type || searchType;
-    console.log("Search executed with:", {
-      searchType: actualType,
-      searchQuery: actualQuery,
-    });
-    // In a real implementation, you would trigger the search here
-  };
+  const { searchQuery, setSearchQuery, searchType, setSearchType, handleSearch } = useSearchBar();
 
   return (
     <SearchContext.Provider value={{

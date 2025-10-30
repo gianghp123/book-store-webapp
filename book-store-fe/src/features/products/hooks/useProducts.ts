@@ -2,46 +2,52 @@ import { useEffect, useState } from "react";
 import { ProductFilterQueryDto } from "../dtos/request/product.dto";
 import { Product } from "../dtos/response/product-response.dto";
 import { productService } from "../services/productService";
+import { useSearchContext } from "@/features/search-bar/providers/SearchContextProvider";
 
 interface UseProductsReturn {
   products: Product[];
   total: number;
   loading: boolean;
   error: string | null;
-  refetch: () => void;
+  refetch: (page?: number) => void;
   currentPage: number;
   totalPages: number;
+  filters: ProductFilterQueryDto;
+  setFilters: (filters: ProductFilterQueryDto) => void;
+  setCurrentPage: (page: number) => void;
 }
 
-export const useProducts = (
-  params: ProductFilterQueryDto
-): UseProductsReturn => {
-  const { page, limit = 16, sortBy = "id", sortOrder = "DESC" } = params;
-
+export const useProducts = (): UseProductsReturn => {
+  const { searchQuery } = useSearchContext();
+  const [filters, setFilters] = useState<ProductFilterQueryDto>({ page: 1, limit: 16, sortBy: "id", sortOrder: "DESC" });
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(page || 1);
   const [totalPages, setTotalPages] = useState(0);
+  
+  useEffect(() => {
+    setFilters({ ...filters, query: searchQuery });
+  }, [searchQuery]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page?: number) => {
     setLoading(true);
     setError(null);
 
     try {
+      console.log(filters);
       const response = await productService.getProducts({
-        ...params,
-        page,
-        limit,
-        sortBy,
-        sortOrder,
+        ...filters,
+        page: page || filters.page,
+        limit: 16,
+        sortBy: "id",
+        sortOrder: "DESC",
       });
 
       if (response.success && response.data) {
         setProducts(response.data || []);
         setTotal(response.pagination?.total || 0);
-        setCurrentPage(response.pagination?.page || 1);
+        setFilters({ ...filters, page: response.pagination?.page || 1 });
         setTotalPages(response.pagination?.totalPages || 0);
       } else {
         setError(response.message || "Failed to fetch products");
@@ -59,7 +65,11 @@ export const useProducts = (
 
   useEffect(() => {
     fetchProducts();
-  }, [page, limit, sortBy, sortOrder]);
+  }, [filters.page, filters.limit, filters.sortBy, filters.sortOrder]);
+
+  const setCurrentPage = (page: number) => {
+    setFilters({ ...filters, page });
+  };
 
   return {
     products,
@@ -67,7 +77,10 @@ export const useProducts = (
     loading,
     error,
     refetch: fetchProducts,
-    currentPage,
+    currentPage: filters.page || 1,
     totalPages,
+    filters,
+    setFilters,
+    setCurrentPage,
   };
 };

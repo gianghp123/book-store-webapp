@@ -12,7 +12,7 @@ export const typeormConfig = {
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,
   synchronize: false,
-  logging: true,
+  logging: false,
   entities: [path.join(__dirname, '../modules/**/entities/*.entity.{ts,js}')],
   migrations: [path.join(__dirname, 'migrations/*.{ts,js}')],
 };

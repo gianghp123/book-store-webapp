@@ -19,7 +19,6 @@ import { Search, Sparkles } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useSearchContext } from "../providers/SearchContextProvider";
-// No longer importing the manual arrow
 
 export function SearchBar() {
   const { 
@@ -69,7 +68,7 @@ export function SearchBar() {
               sideOffset={6}
               className={`px-3 py-2 rounded-lg shadow-lg border text-sm font-medium flex items-center gap-2 ${
                 isSmart
-                  ? "bg-gradient-to-r from-purple-600/90 to-pink-600/90 text-white border-purple-500/40 shadow-purple-500/30 backdrop-blur-md [&>span>svg.z-50]:invisible"
+                  ? "bg-gradient-to-r from-purple-600/80 via-pink-500/80 to-purple-600/80 text-white border-purple-500/40 shadow-purple-500/30 backdrop-blur-md [&>span>svg.z-50]:invisible"
                   : "bg-white text-foreground border-border [&>span>svg.z-50]:invisible"
               }`}
             >
@@ -92,7 +91,7 @@ export function SearchBar() {
             <SelectItem value={SearchType.NORMAL}>Normal</SelectItem>
             <SelectItem value={SearchType.SMART}>
               <div className="flex items-center gap-2 text-purple-600 font-semibold">
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-yellow-600 animate-pulse" />
                 Smart
               </div>
             </SelectItem>
@@ -123,7 +122,7 @@ export function SearchBar() {
           onClick={() => handleSearch()}
           className={`transition-all ${
             isSmart
-              ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-400/40"
+              ? "bg-gradient-to-r from-purple-600/80 to-pink-500/80 hover:bg-purple-700 text-white shadow-lg shadow-purple-400/40"
               : ""
           }`}
         >

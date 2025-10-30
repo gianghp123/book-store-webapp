@@ -17,7 +17,7 @@ export async function apiFetch<T = any>(
     const {
       withCredentials = false,
       transformCase = true,
-      baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '',
+      baseUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "",
       query,
       ...fetchOptions
     } = options || {};
@@ -48,10 +48,20 @@ export async function apiFetch<T = any>(
       const snakeQuery = transformCase ? keysToSnake(query) : query;
       const searchParams = new URLSearchParams();
       Object.entries(snakeQuery).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '' && (Array.isArray(value) ? value.length > 0 : true)) {
-          searchParams.append(key, String(value));
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          (Array.isArray(value) ? value.length > 0 : true)
+        ) {
+          if (Array.isArray(value)) {
+            value.forEach((v) => searchParams.append(key, String(v))); // append each element separately
+          } else {
+            searchParams.append(key, String(value));
+          }
         }
       });
+
       queryString = `?${searchParams.toString()}`;
     }
 
