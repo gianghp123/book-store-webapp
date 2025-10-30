@@ -1,25 +1,35 @@
 import {
+  BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
-  BadRequestException,
+  OnModuleInit,
+  Query,
 } from '@nestjs/common';
+import type { ClientGrpc } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, Like } from 'typeorm';
-import { Product } from './entities/product.entity';
-import { Category } from '../category/entities/category.entity';
-import { Author } from '../author/entities/author.entity';
-import { Book } from './entities/book.entity';
-import { CreateProductDto } from './dto/create-product.dto';
-import { ProductFilterQueryDto } from './dto/product-filter-query.dto';
-import { HybridSearchQueryDto } from './dto/hybrid-search-query.dto';
-import { ProductResponseDto } from './dto/product-response.dto';
-import { PaginatedProductsDto } from './dto/paginated-products.dto';
-import { CategoryResponseDto } from '../category/dto/category-response.dto';
+import { firstValueFrom } from 'rxjs';
+import {
+  HybridBookRetrieverService,
+  RetrieveRequest,
+} from 'src/protos/retriever.service.interface';
+import { FindOptionsWhere, In, Like, Repository } from 'typeorm';
 import { AuthorResponseDto } from '../author/dto/author-response.dto';
-import { Query } from '@nestjs/common';
+import { Author } from '../author/entities/author.entity';
+import { CategoryResponseDto } from '../category/dto/category-response.dto';
+import { Category } from '../category/entities/category.entity';
+import { CreateProductDto } from './dto/create-product.dto';
+import { HybridSearchQueryDto } from './dto/hybrid-search-query.dto';
+import { PaginatedProductsDto } from './dto/paginated-products.dto';
+import { ProductFilterQueryDto } from './dto/product-filter-query.dto';
+import { ProductResponseDto } from './dto/product-response.dto';
+import { Book } from './entities/book.entity';
+import { Product } from './entities/product.entity';
 
 @Injectable()
-export class ProductService {
+export class ProductService implements OnModuleInit {
+  private retrieverService: HybridBookRetrieverService;
+
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
@@ -29,7 +39,15 @@ export class ProductService {
     private authorRepository: Repository<Author>,
     @InjectRepository(Book)
     private bookRepository: Repository<Book>,
+    @Inject('SEARCH_ENGINE_PACKAGE')
+    private client: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.retrieverService = this.client.getService<HybridBookRetrieverService>(
+      'HybridBookRetriever',
+    );
+  }
 
   async findAll(
     @Query() filterQuery: ProductFilterQueryDto,
@@ -141,36 +159,93 @@ export class ProductService {
 
   async hybridSearch(
     searchQuery: HybridSearchQueryDto,
-  ): Promise<ProductResponseDto[]> {
-    // For now, implement a simple text-based search
-    // In a real application, this would use more sophisticated search algorithms
-    const { query, limit = 10 } = searchQuery;
+  ): Promise<PaginatedProductsDto> {
+    const { query, page = 1, limit = 12 } = searchQuery;
+    const offset = (page - 1) * limit;
 
+    if (!query) {
+      throw new BadRequestException('Missing required parameter: query');
+    }
+
+    // 🔹 Step 1: Call gRPC retriever service and await response
+    const grpcRequest: RetrieveRequest = {
+      query,
+      denseTopK: 500,
+      sparseTopK: 500,
+      topK: 100,
+      topN: 50,
+    };
+
+    const retrievedBooks = await firstValueFrom(
+      this.retrieverService.Retrieve(grpcRequest),
+    );
+
+    if (!retrievedBooks?.bookIds?.length) {
+      return {
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        },
+        data: [],
+      };
+    }
+
+    // 🔹 Step 2: Apply pagination to the list of book IDs
+    const paginatedBookIds = retrievedBooks.bookIds.slice(
+      offset,
+      offset + limit,
+    );
+
+    // 🔹 Step 3: Query database using TypeORM
     const products = await this.productRepository.find({
-      where: [
-        { title: Like(`%${query}%`) },
-        { description: Like(`%${query}%`) },
-      ],
-      take: limit,
-      relations: ['book', 'book.categories'],
+      where: {
+        book: { id: In(paginatedBookIds) },
+      },
+      relations: ['book', 'book.categories', 'book.authors'],
     });
 
-    return products.map((product) => {
-      const productDto = ProductResponseDto.fromEntity(product);
-      // Add categories to the response from the book
-      if (product.book && product.book.categories) {
-        productDto.categories = product.book.categories.map((category) =>
-          CategoryResponseDto.fromEntity(category),
-        );
-      }
+    // 🔹 Step 4: Map scores for sorting
+    const scoreMap = Object.fromEntries(
+      retrievedBooks.bookIds.map((id, i) => [
+        id,
+        retrievedBooks.scores[i] ?? 0,
+      ]),
+    );
 
-      if (product.book && product.book.authors) {
-        productDto.authors = product.book.authors.map((author) =>
-          AuthorResponseDto.fromEntity(author),
+    const sortedProducts = products.sort((a, b) => {
+      const scoreA = scoreMap[a.book?.id] ?? 0;
+      const scoreB = scoreMap[b.book?.id] ?? 0;
+      return scoreB - scoreA;
+    });
+
+    // 🔹 Step 5: Map to your DTO
+    const productDtos: ProductResponseDto[] = sortedProducts.map((product) => {
+      const dto = ProductResponseDto.fromEntity(product);
+      if (product.book?.categories) {
+        dto.categories = product.book.categories.map((c) =>
+          CategoryResponseDto.fromEntity(c),
         );
       }
-      return productDto;
+      if (product.book?.authors) {
+        dto.authors = product.book.authors.map((a) =>
+          AuthorResponseDto.fromEntity(a),
+        );
+      }
+      return dto;
     });
+
+    // ✅ Step 6: Return paginated response
+    return {
+      pagination: {
+        total: 50,
+        page,
+        limit,
+        totalPages: Math.ceil(50 / limit),
+      },
+      data: productDtos,
+    };
   }
 
   async create(

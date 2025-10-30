@@ -21,6 +21,13 @@ export class ProductController {
   async findAll(@Query() filterQuery: ProductFilterQueryDto): Promise<PaginatedProductsDto> {
     return this.productService.findAll(filterQuery);
   }
+  
+  @Public()
+  @Get('hybrid-search')
+  @HttpCode(HttpStatus.OK)
+  async hybridSearch(@Query() searchQuery: HybridSearchQueryDto): Promise<PaginatedProductsDto> {
+    return this.productService.hybridSearch(searchQuery);
+  }
 
   @Public()
   @Get(':id')
@@ -29,12 +36,6 @@ export class ProductController {
     return this.productService.findOne(id);
   }
 
-  @Public()
-  @Get('hybrid-search')
-  @HttpCode(HttpStatus.OK)
-  async hybridSearch(@Query() searchQuery: HybridSearchQueryDto): Promise<ProductResponseDto[]> {
-    return this.productService.hybridSearch(searchQuery);
-  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
