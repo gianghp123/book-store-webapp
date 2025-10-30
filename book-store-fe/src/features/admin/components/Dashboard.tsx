@@ -1,6 +1,10 @@
+// src/features/admin/components/Dashboard.tsx
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { DashboardStatsResponse, SalesOverTimeResponse, SalesDataPoint } from "@/features/dashboard/dtos/response/dashboard-response.dto";
 import { BookOpen, DollarSign, ShoppingCart, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -15,23 +19,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-// Mock data for analytics
-const salesData = [
-  { month: "Jan", sales: 4500, orders: 45 },
-  { month: "Feb", sales: 5200, orders: 52 },
-  { month: "Mar", sales: 6800, orders: 68 },
-  { month: "Apr", sales: 7200, orders: 72 },
-  { month: "May", sales: 8500, orders: 85 },
-  { month: "Jun", sales: 9200, orders: 92 },
-];
+import { toast } from "sonner";
+import { dashboardService } from "./services/dashboardService"; 
 
 const categoryData = [
-  { name: "Fiction", value: 35, color: "#3b82f6" },
-  { name: "Non-Fiction", value: 25, color: "#10b981" },
-  { name: "Science", value: 20, color: "#f59e0b" },
-  { name: "History", value: 12, color: "#ef4444" },
-  { name: "Others", value: 8, color: "#8b5cf6" },
+    { name: "Fiction", value: 35, color: "#3b82f6" },
+    { name: "Non-Fiction", value: 25, color: "#10b981" },
+    { name: "Science", value: 20, color: "#f59e0b" },
+    { name: "History", value: 12, color: "#ef4444" },
+    { name: "Others", value: 8, color: "#8b5cf6" },
 ];
 
 const topProducts = [
@@ -81,131 +77,198 @@ const recentOrders = [
 ];
 
 export function Dashboard() {
+  const [statsData, setStatsData] = useState<DashboardStatsResponse | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
+
+  const [salesChartData, setSalesChartData] = useState<SalesDataPoint[]>([]); // Khởi tạo mảng rỗng
+  const [isLoadingSalesChart, setIsLoadingSalesChart] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+       setIsLoadingStats(true);
+      try {
+        const response = await dashboardService.getStats();
+        if (response.success && response.data) {
+          setStatsData(response.data);
+        } else {
+          toast.error(response.message || "Failed to fetch dashboard stats.");
+          setStatsData(null);
+        }
+      } catch (error: any) {
+        console.error("Error fetching dashboard stats:", error);
+        toast.error(error.message || "An unexpected error occurred while fetching stats.");
+        setStatsData(null);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    const fetchSalesOverTime = async () => {
+        setIsLoadingSalesChart(true);
+        try {
+            const response = await dashboardService.getSalesOverTime();
+            if (response.success && response.data) {
+                setSalesChartData(response.data);
+            } else {
+                toast.error(response.message || "Failed to fetch sales data.");
+                setSalesChartData([]); 
+            }
+        } catch (error: any) {
+            console.error("Error fetching sales data:", error);
+            toast.error(error.message || "An unexpected error occurred while fetching sales data.");
+            setSalesChartData([]);
+        } finally {
+            setIsLoadingSalesChart(false);
+        }
+    };
+
+
+    // Gọi cả hai hàm fetch
+    fetchStats();
+    fetchSalesOverTime();
+
+  }, []); 
+
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1>Dashboard</h1>
-        <p className="text-gray-600 mt-1">
-          Welcome to your bookstore management system
-        </p>
-      </div>
+        <div>
+            <h1>Dashboard</h1>
+            <p className="text-gray-600 mt-1">
+            Welcome to your bookstore management system
+            </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Total Revenue</CardTitle>
+                    <DollarSign className="h-5 w-5 text-gray-600" />
+                </CardHeader>
+                <CardContent>
+                    {isLoadingStats ? (
+                    <Spinner className="h-6 w-6" />
+                    ) : (
+                    <div className="text-2xl">
+                        ${statsData?.totalRevenue?.toLocaleString() ?? 0}
+                    </div>
+                    )}
+                </CardContent>
+            </Card>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Total Revenue</CardTitle>
-            <DollarSign className="h-5 w-5 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">$41,400</div>
-            <p className="text-xs text-gray-600 mt-1">+12.5% from last month</p>
-          </CardContent>
-        </Card>
+            {/* Total Orders Card */}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Total Orders</CardTitle>
+                    <ShoppingCart className="h-5 w-5 text-gray-600" />
+                </CardHeader>
+                <CardContent>
+                    {isLoadingStats ? (
+                    <Spinner className="h-6 w-6" />
+                    ) : (
+                    <div className="text-2xl">
+                        {statsData?.totalOrders ?? 0}
+                    </div>
+                    )}
+                </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Total Orders</CardTitle>
-            <ShoppingCart className="h-5 w-5 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">414</div>
-            <p className="text-xs text-gray-600 mt-1">+8.2% from last month</p>
-          </CardContent>
-        </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Total Products</CardTitle>
+                    <BookOpen className="h-5 w-5 text-gray-600" />
+                </CardHeader>
+                <CardContent>
+                    {isLoadingStats ? (
+                    <Spinner className="h-6 w-6" />
+                    ) : (
+                    <div className="text-2xl">
+                        {statsData?.totalProducts ?? 0}
+                    </div>
+                    )}
+                </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Total Products</CardTitle>
-            <BookOpen className="h-5 w-5 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">1,248</div>
-            <p className="text-xs text-gray-600 mt-1">+24 new this month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Active Users</CardTitle>
-            <Users className="h-5 w-5 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl">2,845</div>
-            <p className="text-xs text-gray-600 mt-1">+18.1% from last month</p>
-          </CardContent>
-        </Card>
-      </div>
+            {/* Total Users Card */}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle>Total Users</CardTitle>
+                    <Users className="h-5 w-5 text-gray-600" />
+                </CardHeader>
+                <CardContent>
+                    {isLoadingStats ? (
+                    <Spinner className="h-6 w-6" />
+                    ) : (
+                    <div className="text-2xl">
+                        {statsData?.totalUsers ?? 0}
+                    </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Sales Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Sales Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="sales"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  name="Sales ($)"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="orders"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name="Orders"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {isLoadingSalesChart ? (
+                 <div className="flex justify-center items-center h-[300px]">
+                    <Spinner className="h-8 w-8" />
+                 </div>
+            ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={salesChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                    type="monotone"
+                    dataKey="sales"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    name="Sales ($)"
+                    />
+                </LineChart>
+                </ResponsiveContainer>
+             )}
           </CardContent>
         </Card>
 
-        {/* Category Distribution */}
         <Card>
-          <CardHeader>
-            <CardTitle>Sales by Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }: PieLabelRenderProps) =>
-                    `${name}: ${((percent as number) * 100).toFixed(0)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
+            <CardHeader>
+                <CardTitle>Sales by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                    <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }: PieLabelRenderProps) =>
+                        `${name}: ${((percent as number) * 100).toFixed(0)}%`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    >
+                    {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                    </Pie>
+                    <Tooltip />
+                </PieChart>
+                </ResponsiveContainer>
+            </CardContent>
         </Card>
       </div>
 
-      {/* Top Products and Recent Orders */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Products */}
-        <Card>
+            <Card>
           <CardHeader>
             <CardTitle>Top Selling Products</CardTitle>
           </CardHeader>
@@ -234,7 +297,6 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Orders */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
