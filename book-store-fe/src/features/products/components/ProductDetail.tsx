@@ -24,7 +24,7 @@ interface ProductDetailProps {
 export function ProductDetail({ product, reviews }: ProductDetailProps) {
   const image =
     product.image ||
-    `https://covers.openlibrary.org/b/isbn/${product.book?.isbn}-L.jpg`;
+    `https://covers.openlibrary.org/b/isbn/${product.isbn}-L.jpg`;
 
   const handleAddToCart = () => {
     toast.success(`Added ${product.title} to cart!`);

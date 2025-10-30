@@ -23,6 +23,9 @@ export abstract class BaseResponseDto {
     opts?: ClassTransformOptions,
   ): T[] {
     const plain = instanceToPlain(entities);
+    if (!entities || entities.length === 0) {
+      return [];
+    }
     return plainToInstance(this, plain, {
       excludeExtraneousValues: true,
       ...opts,

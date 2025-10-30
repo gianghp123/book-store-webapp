@@ -48,7 +48,7 @@ export async function apiFetch<T = any>(
       const snakeQuery = transformCase ? keysToSnake(query) : query;
       const searchParams = new URLSearchParams();
       Object.entries(snakeQuery).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
+        if (value !== undefined && value !== null && value !== '' && (Array.isArray(value) ? value.length > 0 : true)) {
           searchParams.append(key, String(value));
         }
       });
