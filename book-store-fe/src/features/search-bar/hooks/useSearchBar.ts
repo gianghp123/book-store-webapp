@@ -7,7 +7,6 @@ interface UseSearchBarReturn {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   handleSearch: () => void;
-  isSmart: boolean;
 }
 
 interface UseSearchBarProps {
@@ -29,7 +28,6 @@ export const useSearchBar = (props?: UseSearchBarProps): UseSearchBarReturn => {
     }
   };
 
-  const isSmart = searchType === SearchType.SMART;
 
   return {
     searchType,
@@ -37,6 +35,5 @@ export const useSearchBar = (props?: UseSearchBarProps): UseSearchBarReturn => {
     searchQuery,
     setSearchQuery,
     handleSearch,
-    isSmart,
   };
 };

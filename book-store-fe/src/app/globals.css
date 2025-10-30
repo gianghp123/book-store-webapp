@@ -76,6 +76,26 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+   /* Solid colors */
+  --brand-purple: #805ad5;
+  --brand-pink: #db2777;
+
+  /* Background gradients */
+  --gradient-purple-pink-light: linear-gradient(
+    to right,
+    rgba(128, 90, 213, 0.1),
+    rgba(219, 39, 119, 0.1),
+    rgba(128, 90, 213, 0.1)
+  );
+
+  --gradient-purple-pink-strong: linear-gradient(
+    to right,
+    rgba(128, 90, 213, 0.8),
+    rgba(219, 39, 119, 0.8)
+  );
+
+  /* Shadows */
+  --shadow-purple-glow: 0 0 15px -5px rgba(192, 132, 252, 0.6);
 }
 
 .dark {
@@ -119,4 +139,36 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+}
+
+.bg-gradient-purple-pink-light {
+  background-image: var(--gradient-purple-pink-light);
+  /* Optional extras */
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.text-gradient-purple-pink-strong {
+  background-image: linear-gradient(to right, #805ad5, #db2777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  transition: background-image 0.3s ease;
+}
+
+.text-gradient-purple-pink-strong-hover:hover {
+  background-image: linear-gradient(to right, #805ad5, #db2777);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.hover-shadow-purple-pink:hover {
+  box-shadow: 0 0 15px rgba(128, 90, 213, 0.5), 0 0 25px rgba(219, 39, 119, 0.5);
 }

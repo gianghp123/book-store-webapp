@@ -11,43 +11,35 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { FilterPanel } from "@/features/categories/components/FilterPanel";
+import { ProductCategory } from "@/features/categories/dtos/response/category.dto";
 import { ProductFilterQueryDto } from "@/features/products/dtos/request/product.dto";
-import { useProducts } from "../hooks/useProducts";
-import { Filter, Grid, List } from "lucide-react";
+import { Grid, List } from "lucide-react";
 import Link from "next/link";
-
-// 1. CẬP NHẬT IMPORTS: Thêm useEffect và useRef
 import { useEffect, useRef, useState } from "react";
-// (Xóa useRouter, usePathname, useSearchParams vì không cần nữa)
-
-import { Product } from "../dtos/response/product-response.dto";
+import { useProducts } from "../hooks/useProducts";
 import { ProductCard } from "./ProductCard";
 import { SortDropdown, SortOption } from "./SortDropDown";
-import { useSearchContext } from "@/features/search-bar/providers/SearchContextProvider";
 
-export function ProductCatalogue() {
-  const [filters, setFilters] = useState<ProductFilterQueryDto>({
-    categoryIds: [],
-    minPrice: 0,
-    maxPrice: 1000,
-  });
-  
-  const { searchQuery } = useSearchContext();
-
-  const [currentPage, setCurrentPage] = useState(1);
+export function ProductCatalogue({
+  categories,
+}: {
+  categories: ProductCategory[];
+}) {
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const sortMapping: Record<SortOption, { field: string; order: 'ASC' | 'DESC' }> = {
-    "relevance": { field: "id", order: "DESC" },
+  const sortMapping: Record<
+    SortOption,
+    { field: string; order: "ASC" | "DESC" }
+  > = {
+    relevance: { field: "id", order: "DESC" },
     "price-low-high": { field: "price", order: "ASC" },
     "price-high-low": { field: "price", order: "DESC" },
-    "rating": { field: "rating", order: "DESC" },
-    "newest": { field: "createdAt", order: "DESC" },
-    "name": { field: "title", order: "ASC" },
+    rating: { field: "rating", order: "DESC" },
+    newest: { field: "createdAt", order: "DESC" },
+    name: { field: "title", order: "ASC" },
   };
 
   const {
@@ -56,18 +48,12 @@ export function ProductCatalogue() {
     loading,
     error,
     totalPages,
-  } = useProducts({
-    query: searchQuery,
-    page: currentPage,
-    limit: 16,
-    sortBy: sortMapping[sortBy].field,
-    sortOrder: sortMapping[sortBy].order,
-    categoryIds: filters.categoryIds,
-    minPrice: filters.minPrice,
-    maxPrice: filters.maxPrice,
-  });
-
-
+    refetch,
+    filters,
+    setFilters,
+    setCurrentPage,
+    currentPage,
+  } = useProducts();
 
   const [shouldSmoothScroll, setShouldSmoothScroll] = useState(false);
   const isFirstLoadRef = useRef(true);
@@ -88,7 +74,7 @@ export function ProductCatalogue() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
     setShouldSmoothScroll(false);
-  }, [currentPage, shouldSmoothScroll]);
+  }, [filters.page, shouldSmoothScroll]);
 
   const handlePageChange = (page: number) => {
     setShouldSmoothScroll(true);
@@ -97,11 +83,23 @@ export function ProductCatalogue() {
 
   const handleFilterChange = (newFilters: ProductFilterQueryDto) => {
     setFilters(newFilters);
-    setCurrentPage(1);
   };
 
-  const handleSortChange = (newSort: SortOption) => {
-    setSortBy(newSort);
+  const handleClearFilters = () => {
+    setFilters({
+      categoryIds: [],
+      minPrice: undefined,
+      maxPrice: undefined,
+    });
+  };
+
+  const handleApplyFilters = () => {
+    console.log(filters);
+    refetch(1);
+  };
+
+  const handleSortChange = (value: SortOption) => {
+    setSortBy(value);
     setCurrentPage(1);
   };
 
@@ -139,14 +137,6 @@ export function ProductCatalogue() {
     return pages;
   };
 
-  if (loading) {
-    return (
-      <div className="container flex justify-center items-center">
-        <Spinner />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="container flex justify-center items-center">
@@ -159,31 +149,18 @@ export function ProductCatalogue() {
     <div className="container">
       <div className="flex gap-6">
         <div className="hidden lg:block flex-shrink-0">
-          <FilterPanel filters={filters} onFiltersChange={handleFilterChange} />
+          <FilterPanel
+            filters={filters}
+            onFiltersChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+            onApplyFilters={handleApplyFilters}
+            categories={categories}
+          />
         </div>
 
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center gap-4">
-              <h1>Books ({total ?? products.length})</h1>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="lg:hidden">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-80 p-0">
-                  <div className="p-4">
-                    <FilterPanel
-                      filters={filters}
-                      onFiltersChange={handleFilterChange}
-                      isMobile={true}
-                    />
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+            <h1>Books ({total ?? products.length})</h1>
 
             <div className="flex items-center gap-4">
               <div className="flex items-center border rounded-md">
@@ -208,32 +185,19 @@ export function ProductCatalogue() {
             </div>
           </div>
 
-          {/* Products Grid */}
-          {products.length === 0 ? (
+          {loading ? (
+            <div className="container flex justify-center items-center">
+              <Spinner />
+            </div>
+          ) : products.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 No books found matching your filters.
               </p>
-              <Button
-                variant="outline"
-                // Cập nhật nút Clear Filters
-                onClick={() =>
-                  handleFilterChange({
-                    categoryIds: [],
-                    minPrice: 0,
-                    maxPrice: 1000,
-                  })
-                }
-                className="mt-4"
-              >
-                Clear Filters
-              </Button>
             </div>
           ) : (
             <>
-              <div
-                className={`opacity-100`}
-              >
+              <div className={`opacity-100`}>
                 <div
                   className={
                     viewMode === "grid"

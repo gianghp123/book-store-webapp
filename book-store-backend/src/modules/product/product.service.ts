@@ -70,11 +70,12 @@ export class ProductService implements OnModuleInit {
 
     const offset = (page - 1) * limit;
 
+    // Handle SMART search separately
     if (searchType === SearchType.SMART && query) {
-      return this.hybridSearch({ query: query!, page, limit });
+      return this.hybridSearch({ query, page, limit });
     }
 
-    // ✅ Step 1: Build subquery to select product IDs
+    // Step 1: Build subquery to get product IDs
     const subQuery = this.productRepository
       .createQueryBuilder('product')
       .select('product.id')
@@ -92,14 +93,12 @@ export class ProductService implements OnModuleInit {
       subQuery.andWhere('product.price <= :maxPrice', { maxPrice });
     }
 
-    // ✅ Only join categories if the user actually filters by them
     if (categoryIds && categoryIds.length > 0) {
       subQuery
         .leftJoin('book.categories', 'categories')
         .andWhere('categories.id IN (:...categoryIds)', { categoryIds });
     }
 
-    // ✅ Sorting
     if (sortBy) {
       const direction = sortOrder?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
       subQuery.orderBy(`product.${sortBy}`, direction);
@@ -107,30 +106,35 @@ export class ProductService implements OnModuleInit {
       subQuery.orderBy('product.createdAt', 'DESC');
     }
 
-    // ✅ Step 2: Get total count from subquery
+    // Step 2: Get total count
     const total = await subQuery.getCount();
 
-    // ✅ Step 3: Paginate IDs only
-    const ids = await subQuery.offset(offset).limit(limit).getRawMany();
+    // Step 3: Paginate IDs only
+    const ids = await subQuery.getRawMany();
 
-    if (ids.length === 0) {
-      return {
-        data: [],
-        pagination: { total, page, limit, totalPages: 0 },
-      };
-    }
+    // Deduplicate IDs BEFORE slicing for pagination
+    const uniqueProductIds = Array.from(new Set(ids.map(r => r.product_id ?? r.id)));
 
-    const productIds = ids.map((r) => r.product_id ?? r.id);
+    // Apply offset and limit manually after deduplication
+    const paginatedIds = uniqueProductIds.slice(offset, offset + limit);
 
-    // ✅ Step 4: Load full entities with relations
-    const products = await this.productRepository.find({
-      where: { id: In(productIds) },
-      relations: ['book', 'book.categories', 'book.authors'],
-      order: { createdAt: 'DESC' },
-    });
+    // Step 4: Load full entities with relations safely
+    const products = await this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.book', 'book')
+      .leftJoinAndSelect('book.categories', 'categories')
+      .leftJoinAndSelect('book.authors', 'authors')
+      .where('product.id IN (:...ids)', { ids: paginatedIds })
+      .getMany();
 
-    // ✅ Step 5: Transform into DTOs
-    const data = ProductResponseDto.fromEntities(products);
+    // Step 5: Preserve original order from subquery
+    const productsMap = new Map(products.map((p) => [p.id, p]));
+    const orderedProducts = paginatedIds
+      .map((id) => productsMap.get(id))
+      .filter(Boolean);
+
+    // Step 6: Transform entities to DTOs
+    const data = ProductResponseDto.fromEntities(orderedProducts);
 
     return {
       data,
