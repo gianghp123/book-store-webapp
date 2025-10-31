@@ -29,7 +29,7 @@ const formSchema = z.object({
   phoneNumber: z.string().optional(),
   password: z
     .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
+    .min(4, { message: "Password must be at least 4 characters" }),
 });
 
 export function SignUpForm({
@@ -141,7 +141,7 @@ export function SignUpForm({
               <FormControl>
                 <Input
                   type="password"
-                  placeholder="At least 6 characters."
+                  placeholder="At least 4 characters."
                   {...field}
                 />
               </FormControl>

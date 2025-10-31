@@ -1,28 +1,23 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { toast } from "sonner";
+import { useForm, FormProvider, Controller } from "react-hook-form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Info, Lock } from "lucide-react";
-import Image from "next/image";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-
-// *** THÊM CÁC IMPORT CẦN THIẾT ***
-import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
-import { useMemo, useState } from "react";
-import { ImageWithFallback } from "@/components/ImageWithFallBack";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { Info, Lock } from "lucide-react";
+import { ImageWithFallback } from "@/components/ImageWithFallBack";
+import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
 import { orderService } from "../services/orderService";
 import { CreateOrderDto } from "../dtos/request/order.dto";
-// Import react-hook-form
-import { useForm, FormProvider, Controller } from "react-hook-form";
-// *** KẾT THÚC THÊM IMPORT ***
-
 
 interface SavedCard {
   cardType: string;
@@ -32,8 +27,8 @@ interface SavedCard {
 }
 
 interface PaymentFormProps {
-  cartData: CartResponse; 
-  imageFallbackUrl: string; 
+  cartData: CartResponse;
+  imageFallbackUrl: string;
   title?: string;
   secureBadgeText?: string;
   creditCardTabLabel?: string;
@@ -62,14 +57,13 @@ interface PaymentFormProps {
   securityFooterText?: string;
 }
 
-// *** THÊM KIỂU DỮ LIỆU CHO FORM ***
 type PaymentFormData = {
   cardholderName: string;
   cardNumber: string;
   expiryDate: string;
   cvv: string;
   zipCode: string;
-  paymentMethod: 'new' | 'saved';
+  paymentMethod: "new" | "saved";
 };
 
 const PaymentForm1 = ({
@@ -113,20 +107,18 @@ const PaymentForm1 = ({
   ],
   securityFooterText = "Secured by Stripe • PCI DSS compliant • SERP LLC - United States",
 }: PaymentFormProps) => {
-
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // *** KHỞI TẠO REACT-HOOK-FORM ***
   const methods = useForm<PaymentFormData>({
     defaultValues: {
-      paymentMethod: 'new',
-      cardholderName: '',
-      cardNumber: '',
-      expiryDate: '',
-      cvv: '',
-      zipCode: '',
-    }
+      paymentMethod: "new",
+      cardholderName: "",
+      cardNumber: "",
+      expiryDate: "",
+      cvv: "",
+      zipCode: "",
+    },
   });
 
   const subtotal = useMemo(
@@ -138,14 +130,13 @@ const PaymentForm1 = ({
     [cartData.items]
   );
 
-  const total = subtotal; 
+  const total = subtotal;
 
-  // *** CẬP NHẬT HÀM XỬ LÝ THANH TOÁN ***
   const handlePayment = async (formData: PaymentFormData) => {
     setIsProcessing(true);
-    
+
     const orderDto: CreateOrderDto = {
-      items: cartData.items.map(item => ({ productId: item.productId }))
+      items: cartData.items.map((item) => ({ productId: item.productId })),
     };
 
     try {
@@ -153,14 +144,8 @@ const PaymentForm1 = ({
 
       if (response.success && response.data) {
         toast.success("Đặt hàng thành công!");
-        
-        // LƯU DỮ LIỆU VÀO SESSIONSTORAGE
-        // 1. Dữ liệu Order (API trả về)
-        sessionStorage.setItem('confirmationOrder', JSON.stringify(response.data));
-        // 2. Dữ liệu Form (Người dùng nhập)
-        sessionStorage.setItem('confirmationForm', JSON.stringify(formData));
-
-        // Chuyển hướng đến trang xác nhận với ID đơn hàng
+        sessionStorage.setItem("confirmationOrder", JSON.stringify(response.data));
+        sessionStorage.setItem("confirmationForm", JSON.stringify(formData));
         router.push(`/confirmation/${response.data.id}`);
       } else {
         if (response.statusCode === 401) {
@@ -176,10 +161,9 @@ const PaymentForm1 = ({
       setIsProcessing(false);
     }
   };
-  // *** KẾT THÚC HÀM XỬ LÝ THANH TOÁN ***
 
   return (
-    <FormProvider {...methods}> {/* Bọc form bằng FormProvider */}
+    <FormProvider {...methods}>
       <div>
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
@@ -190,7 +174,6 @@ const PaymentForm1 = ({
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
-          {/* === CỘT TRÁI: FORM THANH TOÁN === */}
           <Card className="border">
             <CardContent className="pt-6">
               <Tabs defaultValue="card">
@@ -199,18 +182,18 @@ const PaymentForm1 = ({
                   <TabsTrigger value="paypal">{paypalTabLabel}</TabsTrigger>
                 </TabsList>
 
-                {/* === NỘI DUNG TAB CREDIT CARD === */}
-                {/* Bọc nội dung tab bằng form và gọi hàm handleSubmit */}
                 <TabsContent value="card" className="mt-6" asChild>
-                  <form onSubmit={methods.handleSubmit(handlePayment)} className="space-y-6">
-                    {/* ... (RadioGroup) ... */}
+                  <form
+                    onSubmit={methods.handleSubmit(handlePayment)}
+                    className="space-y-6"
+                  >
                     <Controller
                       control={methods.control}
                       name="paymentMethod"
                       render={({ field }) => (
-                        <RadioGroup 
-                          onValueChange={field.onChange} 
-                          value={field.value} 
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          value={field.value}
                           className="space-y-4"
                         >
                           <div className="rounded-lg border p-4">
@@ -244,58 +227,41 @@ const PaymentForm1 = ({
                         </RadioGroup>
                       )}
                     />
-                    
-                    {/* ... (Các Input fields) ... */}
+
                     <div className="space-y-4">
-                      {/* Cardholder Name */}
                       <Controller
                         control={methods.control}
                         name="cardholderName"
                         render={({ field }) => (
                           <div className="space-y-2">
                             <Label htmlFor="name">{cardholderNameLabel}</Label>
-                            <Input
-                              id="name"
-                              placeholder={cardholderNamePlaceholder}
-                              {...field}
-                            />
+                            <Input id="name" placeholder={cardholderNamePlaceholder} {...field} />
                           </div>
                         )}
                       />
-                      
-                      {/* Card Number */}
+
                       <Controller
                         control={methods.control}
                         name="cardNumber"
                         render={({ field }) => (
                           <div className="space-y-2">
                             <Label htmlFor="card">{cardNumberLabel}</Label>
-                            <Input 
-                              id="card" 
-                              placeholder={cardNumberPlaceholder} 
-                              {...field} 
-                            />
+                            <Input id="card" placeholder={cardNumberPlaceholder} {...field} />
                           </div>
                         )}
                       />
 
                       <div className="grid grid-cols-2 gap-4">
-                        {/* Expiry Date */}
                         <Controller
                           control={methods.control}
                           name="expiryDate"
                           render={({ field }) => (
                             <div className="space-y-2">
                               <Label htmlFor="expiry">{expiryDateLabel}</Label>
-                              <Input
-                                id="expiry"
-                                placeholder={expiryDatePlaceholder}
-                                {...field}
-                              />
+                              <Input id="expiry" placeholder={expiryDatePlaceholder} {...field} />
                             </div>
                           )}
                         />
-                        {/* CVV */}
                         <Controller
                           control={methods.control}
                           name="cvv"
@@ -311,7 +277,6 @@ const PaymentForm1 = ({
                         />
                       </div>
 
-                      {/* Zip Code */}
                       <Controller
                         control={methods.control}
                         name="zipCode"
@@ -323,33 +288,29 @@ const PaymentForm1 = ({
                         )}
                       />
 
-                      {/* Promo Code (không nằm trong form chính) */}
                       <div className="space-y-2">
                         <Label htmlFor="promo">{promoCodeLabel}</Label>
                         <div className="flex gap-2">
                           <Input id="promo" placeholder={promoCodePlaceholder} />
-                          <Button variant="outline" type="button">{applyButtonLabel}</Button>
+                          <Button variant="outline" type="button">
+                            {applyButtonLabel}
+                          </Button>
                         </div>
                       </div>
                     </div>
 
-                    <Button 
-                      type="submit" // Đảm bảo type="submit"
-                      size="lg" 
-                      className="w-full" 
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="w-full"
                       disabled={isProcessing}
                     >
-                      {isProcessing ? (
-                        <Spinner className="mr-2" />
-                      ) : (
-                        <Lock className="mr-2 h-4 w-4" />
-                      )}
+                      {isProcessing ? <Spinner className="mr-2" /> : <Lock className="mr-2 h-4 w-4" />}
                       {isProcessing ? "Đang xử lý..." : `Pay $${total.toFixed(2)}`}
                     </Button>
                   </form>
                 </TabsContent>
 
-                {/* === NỘI DUNG TAB PAYPAL (Giữ nguyên) === */}
                 <TabsContent value="paypal" className="mt-6">
                   <div className="flex flex-col items-center space-y-6 py-8">
                     <Image
@@ -359,19 +320,14 @@ const PaymentForm1 = ({
                       height={40}
                       className="h-10 w-auto"
                     />
-                    <p className="text-center text-muted-foreground">
-                      {paypalRedirectMessage}
-                    </p>
-                    <Button className="w-full">
-                      {continueWithPaypalButtonLabel}
-                    </Button>
+                    <p className="text-center text-muted-foreground">{paypalRedirectMessage}</p>
+                    <Button className="w-full">{continueWithPaypalButtonLabel}</Button>
                   </div>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
 
-          {/* === CỘT PHẢI: ORDER SUMMARY (Giữ nguyên) === */}
           <Card className="border">
             <CardContent className="pt-6">
               <div className="space-y-6">
@@ -379,36 +335,35 @@ const PaymentForm1 = ({
                   <h3 className="text-lg font-semibold text-foreground">
                     {orderSummaryTitle} ({cartData.items.length} items)
                   </h3>
-                  
-                  <div className="space-y-4 border-b pb-4 max-h-60 overflow-y-auto">
+
+                  <div className="max-h-60 space-y-4 overflow-y-auto border-b pb-4">
                     {cartData.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-4">
-                        <div className="relative w-16 h-16">
+                        <div className="relative h-16 w-16">
                           <ImageWithFallback
                             src={item.imageUrl}
                             alt={item.title}
                             fill
                             className="rounded-lg border object-contain"
                             fallbackSrc={imageFallbackUrl}
-                            unoptimized={true}
+                            unoptimized
                           />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-foreground text-sm line-clamp-1">
+                          <p className="line-clamp-1 text-sm font-medium text-foreground">
                             {item.title}
                           </p>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {item.authors?.map((a) => a.name).join(", ") ||
-                              "Unknown Author"}
+                          <p className="line-clamp-1 text-sm text-muted-foreground">
+                            {item.authors?.map((a) => a.name).join(", ") || "Unknown Author"}
                           </p>
                         </div>
-                        <p className="font-medium text-sm">
+                        <p className="text-sm font-medium">
                           ${(parseFloat(item.price as any) || 0).toFixed(2)}
                         </p>
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
@@ -428,9 +383,7 @@ const PaymentForm1 = ({
 
                   <div className="flex items-center gap-2 rounded-lg bg-accent p-4">
                     <Info className="h-5 w-5 text-primary" />
-                    <p className="text-sm text-muted-foreground">
-                      {moneyBackGuaranteeMessage}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{moneyBackGuaranteeMessage}</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 pt-4">
@@ -446,9 +399,7 @@ const PaymentForm1 = ({
                     ))}
                   </div>
 
-                  <p className="text-xs text-muted-foreground">
-                    {securityFooterText}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{securityFooterText}</p>
                 </div>
               </div>
             </CardContent>

@@ -29,9 +29,7 @@ export function CartPagination({
   onNext,
   className,
 }: CartPaginationProps) {
-  
-  // 2. Mang hàm getPaginationItems (từ Cart.tsx) vào đây
-  // Nó sẽ dùng props (current, pageCount) thay vì state
+
   const getPaginationItems = () => {
     const pages: React.ReactNode[] = [];
     if (pageCount <= 5) {
@@ -99,7 +97,7 @@ export function CartPagination({
             isActive={current === pageCount}
             onClick={(e) => {
               e.preventDefault();
-              onPageChange(pageCount); // Gọi hàm prop
+              onPageChange(pageCount); 
             }}
           >
             {pageCount}
@@ -110,10 +108,8 @@ export function CartPagination({
     return pages;
   };
 
-  // 3. Đây là JSX của thanh phân trang
   return (
     <footer className="mt-4">
-      {/* Sử dụng className được truyền từ cha (chứa "justify-start ml-55") */}
       <Pagination className={cn(className)}>
         <PaginationContent>
           <PaginationItem>
@@ -121,7 +117,7 @@ export function CartPagination({
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                onPrevious(); // Gọi hàm prop
+                onPrevious(); 
               }}
               aria-disabled={current === 1}
               className={
@@ -137,7 +133,7 @@ export function CartPagination({
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                onNext(); // Gọi hàm prop
+                onNext(); 
               }}
               aria-disabled={current === pageCount}
               className={
