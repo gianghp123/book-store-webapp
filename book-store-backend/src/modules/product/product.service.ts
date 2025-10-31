@@ -113,10 +113,24 @@ export class ProductService implements OnModuleInit {
     const ids = await subQuery.getRawMany();
 
     // Deduplicate IDs BEFORE slicing for pagination
-    const uniqueProductIds = Array.from(new Set(ids.map(r => r.product_id ?? r.id)));
+    const uniqueProductIds = Array.from(
+      new Set(ids.map((r) => r.product_id ?? r.id)),
+    );
 
     // Apply offset and limit manually after deduplication
     const paginatedIds = uniqueProductIds.slice(offset, offset + limit);
+
+    if (!paginatedIds.length) {
+      return {
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        },
+        data: [],
+      };
+    }
 
     // Step 4: Load full entities with relations safely
     const products = await this.productRepository

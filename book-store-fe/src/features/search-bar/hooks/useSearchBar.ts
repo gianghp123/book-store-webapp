@@ -1,39 +1,26 @@
-import { useState } from "react";
 import { SearchType } from "@/lib/constants/enums";
+import { useState } from "react";
 
 interface UseSearchBarReturn {
   searchType: SearchType;
   setSearchType: (type: SearchType) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  handleSearch: () => void;
+  searchInput: string;
+  setSearchInput: (input: string) => void;
 }
 
-interface UseSearchBarProps {
-  onSearch?: (searchType: SearchType, searchQuery: string) => void;
-}
-
-export const useSearchBar = (props?: UseSearchBarProps): UseSearchBarReturn => {
+export const useSearchBar = (): UseSearchBarReturn => {
   const [searchType, setSearchType] = useState<SearchType>(SearchType.NORMAL);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearch = () => {
-    if (props?.onSearch) {
-      props.onSearch(searchType, searchQuery);
-    } else {
-      console.log("Search button clicked with filters:", {
-        searchType,
-        searchQuery,
-      });
-    }
-  };
-
+  const [searchInput, setSearchInput] = useState("");
 
   return {
     searchType,
     setSearchType,
     searchQuery,
     setSearchQuery,
-    handleSearch,
+    searchInput,
+    setSearchInput,
   };
 };

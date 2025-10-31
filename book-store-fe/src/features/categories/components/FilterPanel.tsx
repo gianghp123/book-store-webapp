@@ -41,6 +41,10 @@ export function FilterPanel({
     price: true,
   });
 
+  const [categoryIds, setCategoryIds] = useState<string[]>(filters.categoryIds || []);
+  const [minPrice, setMinPrice] = useState<number | undefined>(filters.minPrice);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(filters.maxPrice);
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -50,32 +54,33 @@ export function FilterPanel({
 
   const handleCategoryChange = (categoryId: string, checked: boolean) => {
     const newCategories = checked
-      ? [...(filters.categoryIds || []), categoryId]
-      : (filters.categoryIds || []).filter((id) => id !== categoryId);
+      ? [...categoryIds, categoryId]
+      : categoryIds.filter((id) => id !== categoryId);
 
-    onFiltersChange({
-      ...filters,
-      categoryIds: newCategories,
-    });
+    setCategoryIds(newCategories);
   };
 
   const handleMinPriceChange = (value: string) => {
-    onFiltersChange({
-      ...filters,
-      minPrice: value === "" ? undefined : parseFloat(value),
-    });
+    setMinPrice(value === "" ? undefined : parseFloat(value));
   };
 
   const handleMaxPriceChange = (value: string) => {
-    onFiltersChange({
-      ...filters,
-      maxPrice: value === "" ? undefined : parseFloat(value),
-    });
+    setMaxPrice(value === "" ? undefined : parseFloat(value));
   };
   const filterCount =
-    (filters.categoryIds?.length || 0) +
-    (filters.minPrice && filters.minPrice > 0 ? 1 : 0) +
+    (categoryIds.length || 0) +
+    (minPrice && minPrice > 0 ? 1 : 0) +
     (filters.maxPrice && filters.maxPrice < 1000 ? 1 : 0);
+
+  const handleApplyFilters = () => {
+    onFiltersChange({
+      ...filters,
+      categoryIds,
+      minPrice,
+      maxPrice,
+    });
+    onApplyFilters();
+  };
 
   return (
     <Card className={`h-fit sticky top-20 ${isMobile ? "w-full" : "w-80"}`}>
@@ -131,9 +136,7 @@ export function FilterPanel({
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`cat-${category.id}`}
-                          checked={(filters.categoryIds || []).includes(
-                            category.id
-                          )}
+                          checked={categoryIds.includes(category.id)}
                           onCheckedChange={(checked) =>
                             handleCategoryChange(
                               category.id,
@@ -223,9 +226,9 @@ export function FilterPanel({
                 </div>
               </div>
             </div>
-            <Button onClick={onApplyFilters} size="sm" className="w-full mt-2">
+            <Button onClick={handleApplyFilters} size="sm" className="w-full mt-2">
               <Search className="mr-2 h-4 w-4" />
-              Search
+              Apply Filters
             </Button>
           </CollapsibleContent>
         </Collapsible>

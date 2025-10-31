@@ -21,15 +21,21 @@ import { Input } from "../../../components/ui/input";
 import { useSearchContext } from "../providers/SearchContextProvider";
 
 export function SearchBar() {
-  const { 
-    searchType, 
-    setSearchType, 
-    searchQuery, 
-    setSearchQuery, 
-    handleSearch 
+  const {
+    searchType,
+    setSearchType,
+    setSearchQuery,
+    searchInput,
+    setSearchInput,
   } = useSearchContext();
 
   const isSmart = searchType === SearchType.SMART;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    console.log(searchInput);
+    e.preventDefault();
+    setSearchQuery(searchInput);
+  };
 
   return (
     <TooltipProvider>
@@ -76,7 +82,9 @@ export function SearchBar() {
               {isSmart ? (
                 <>
                   <Sparkles className="h-4 w-4 text-yellow-300 animate-pulse" />
-                  <span>Smart mode: uses advanced search based on your query</span>
+                  <span>
+                    Smart mode: uses advanced search based on your query
+                  </span>
                 </>
               ) : (
                 <>
@@ -113,13 +121,13 @@ export function SearchBar() {
                 ? "border-purple-400 bg-input-background focus-visible:ring-purple-500"
                 : "bg-input-background"
             }`}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
 
         <Button
-          onClick={() => handleSearch()}
+          onClick={handleSubmit}
           className={`transition-all ${
             isSmart
               ? "bg-gradient-to-r from-purple-600/80 to-pink-500/80 hover:bg-purple-700 text-white shadow-lg shadow-purple-400/40"
