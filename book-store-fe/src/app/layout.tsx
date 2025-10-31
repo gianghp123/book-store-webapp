@@ -34,7 +34,7 @@ export default function RootLayout({
             {children}
           </Refine>
         </QueryClientProvider>
-        <Toaster />
+        <Toaster position="top-right"/>
       </body>
     </html>
   );

@@ -18,6 +18,7 @@ import { ProductFilterQueryDto } from "@/features/products/dtos/request/product.
 import { Grid, List } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useProducts } from "../hooks/useProducts";
 import { ProductCard } from "./ProductCard";
 import { SortDropdown, SortOption } from "./SortDropDown";
@@ -137,13 +138,11 @@ export function ProductCatalogue({
     return pages;
   };
 
-  if (error) {
-    return (
-      <div className="container flex justify-center items-center">
-        <div className="text-red-500">{error}</div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
 
   return (
     <div className="container">
