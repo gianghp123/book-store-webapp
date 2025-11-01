@@ -1,4 +1,5 @@
 import { SearchType } from "@/lib/constants/enums";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 interface UseSearchBarReturn {
@@ -11,9 +12,11 @@ interface UseSearchBarReturn {
 }
 
 export const useSearchBar = (): UseSearchBarReturn => {
-  const [searchType, setSearchType] = useState<SearchType>(SearchType.NORMAL);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchInput, setSearchInput] = useState("");
+  const searchParams = useSearchParams();
+  const [searchType, setSearchType] = useState<SearchType>(searchParams.get("searchType") as SearchType || SearchType.NORMAL);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("query") || "");
+  const [searchInput, setSearchInput] = useState(searchParams.get("query") || "");
+  
 
   return {
     searchType,

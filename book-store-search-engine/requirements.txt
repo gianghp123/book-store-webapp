@@ -1,0 +1,18 @@
+dotenv
+requests
+psycopg[binary]
+transformers
+sentence-transformers
+qdrant-client[fastembed] 
+fastembed
+langchain
+langchain-openai
+grpcio
+grpcio-tools
+redis
+einops
+# Langsmith for pipeline tracing
+langsmith
+# optional for experiment and evaluation
+# pandas
+# matplotlib

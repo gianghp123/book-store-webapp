@@ -10,7 +10,7 @@ interface UseProductsReturn {
   products: Product[];
   total: number;
   loading: boolean;
-  error: string | null;
+  error: Error | null;
   refetch: (page?: number) => void;
   currentPage: number;
   totalPages: number;
@@ -55,7 +55,7 @@ export const useProducts = (): UseProductsReturn => {
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [totalPages, setTotalPages] = useState(0);
 
   const fetchProducts = 
@@ -81,12 +81,12 @@ export const useProducts = (): UseProductsReturn => {
             page: response.pagination?.page || 1,
           }));
         } else {
-          setError(response.message || "Failed to fetch products");
+          setError(new Error(response.message || "Failed to fetch products"));
           setProducts([]);
           setTotal(0);
         }
-      } catch (err: any) {
-        setError(err.message || "An error occurred while fetching products");
+      } catch (err) {
+        setError(err as Error);
         setProducts([]);
         setTotal(0);
       } finally {
