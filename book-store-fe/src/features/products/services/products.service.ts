@@ -1,12 +1,13 @@
 import { apiFetch } from "@/lib/api-fetch";
 import { ProductFilterQueryDto } from "../dtos/request/product.dto";
 import { Product } from "../dtos/response/product-response.dto";
+import { SortOrder } from "@/lib/constants/enums";
 
 interface GetProductsParams extends ProductFilterQueryDto {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: "ASC" | "DESC";
+  sortOrder?: SortOrder;
 }
 
 export const productService = {

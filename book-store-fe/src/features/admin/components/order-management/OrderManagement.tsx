@@ -25,12 +25,7 @@ export function OrderManagement() {
     setCurrentPage,
   } = useTable<Order, HttpError>({
     resource: "orders",
-    // sorters: [
-    //   {
-    //     field: "createdAt",
-    //     order: "desc",
-    //   },
-    // ],
+    dataProviderName: "admin",
     pagination: {
       pageSize: 10,
     },
@@ -112,7 +107,7 @@ export function OrderManagement() {
                   $
                   {result.data
                     ?.reduce((total, order) => total + order.totalAmount, 0)
-                    .toFixed(2)}
+                    }
                 </div>
               </div>
               <DollarSign className="h-8 w-8 text-purple-600" />
@@ -171,7 +166,7 @@ export function OrderManagement() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Amount</p>
-                  <p>${selectedOrder.totalAmount.toFixed(2)}</p>
+                  <p>${selectedOrder.totalAmount}</p>
                 </div>
               </div>
 
@@ -192,7 +187,7 @@ export function OrderManagement() {
                         )}
                       </div>
                       <div className="text-right">
-                        <p>${item.price.toFixed(2)}</p>
+                        <p>${item.price}</p>
                       </div>
                     </div>
                   ))}

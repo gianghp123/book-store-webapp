@@ -24,12 +24,14 @@ import { toast } from "sonner";
 import { CartItem, CartResponse } from "../dtos/response/cart-response.dto";
 import { cartService } from "../services/cartService";
 import { CartPagination } from "./CartPagination";
+import { useCartItemsCount } from "@/features/carts/context/CartItemsCountContext";
 
 interface Props {
   cartResponse?: CartResponse;
 }
 
 const ShoppingCart1Page = ({ cartResponse }: Props) => {
+  const { refresh: refreshCartItemsCount } = useCartItemsCount();
   const [items, setItems] = useState(cartResponse?.items || []);
   const [current, setCurrent] = useState(1);
   const itemsPerPage = 3;
@@ -49,7 +51,7 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
 
   const subtotal = useMemo(() => {
     return items.reduce(
-      (acc, item) => acc + (parseFloat(item.product.price as any) || 0),
+      (acc, item) => acc + (parseFloat(item.product?.price as any) || 0),
       0
     );
   }, [items]);
@@ -81,6 +83,7 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
         );
         setIsConfirmOpen(false);
         setItemToConfirmDelete(null);
+        refreshCartItemsCount();
       } else {
         toast.error(response.message || "Delete failed, please try again.");
       }
@@ -106,28 +109,28 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
                 </Card>
               ) : (
                 currentItems.map((item) => (
-                  <Card key={item.id}>
+                  <Card key={item.id} className="p-0">
                     <CardContent className="flex gap-4 p-4">
-                      <div className="relative h-24 w-24">
+                      <div className="relative h-36 w-24">
                         <ImageWithFallback
                           src={
-                            item.product.image ||
-                            `https://covers.openlibrary.org/b/isbn/${item.product.isbn}-M.jpg`
+                            item.product?.image ||
+                            `https://covers.openlibrary.org/b/isbn/${item.product?.isbn}-M.jpg`
                           }
-                          alt={item.product.title}
+                          alt={item.product?.title || ""}
                           fill
                           className="object-contain"
                         />
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-1">
                         <div>
-                          <Link href={`/products/${item.product.id}`}>
+                          <Link href={`/products/${item.product?.id}`}>
                             <h3 className="font-medium text-lg hover:text-primary transition-colors cursor-pointer">
-                              {item.product.title}
+                              {item.product?.title}
                             </h3>
                           </Link>
 
-                          {item.product.authors &&
+                          {item.product?.authors &&
                             item.product.authors.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-2">
                                 {item.product.authors.map((author) => (
@@ -138,7 +141,7 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
                               </div>
                             )}
 
-                          {item.product.categories &&
+                          {item.product?.categories &&
                             item.product.categories.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {item.product.categories.map((category) => (
@@ -154,7 +157,7 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
                       <div className="text-right flex flex-col justify-between">
                         <span className="font-bold text-lg">
                           $
-                          {(parseFloat(item.product.price as any) || 0).toFixed(
+                          {(parseFloat(item.product?.price as any) || 0).toFixed(
                             2
                           )}
                         </span>

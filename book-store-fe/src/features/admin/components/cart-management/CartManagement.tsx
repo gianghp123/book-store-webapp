@@ -22,12 +22,12 @@ export function CartManagement() {
   const {
     result,
     tableQuery,
-    pageSize,
     pageCount,
     setCurrentPage,
     currentPage,
   } = useTable<CartResponse, HttpError>({
     resource: "carts",
+    dataProviderName: "admin",
     pagination: {
       pageSize: 10,
     },

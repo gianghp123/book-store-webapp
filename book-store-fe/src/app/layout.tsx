@@ -8,6 +8,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,15 +30,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryClientProvider client={queryClient}>
-          <Refine
-            dataProvider={dataProvider()}
-            authProvider={authProvider}
-            routerProvider={routerProvider}
-          >
-            {children}
-          </Refine>
-        </QueryClientProvider>
+        <Suspense>
+          <QueryClientProvider client={queryClient}>
+            <Refine
+              dataProvider={{
+                default: dataProvider(false),
+                admin: dataProvider(true),
+              }}
+              authProvider={authProvider}
+              routerProvider={routerProvider}
+            >
+              {children}
+            </Refine>
+          </QueryClientProvider>
+        </Suspense>
         <Toaster position="top-right" />
       </body>
     </html>

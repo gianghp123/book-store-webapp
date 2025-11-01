@@ -28,7 +28,8 @@ import { userColumns } from "./columns";
 export function UserManagement() {
   const { result, tableQuery, currentPage, setCurrentPage, pageCount } =
     useTable<User, HttpError>({
-      resource: 'users',
+      resource: "users",
+      dataProviderName: "admin",
       pagination: {
         pageSize: 10,
       },

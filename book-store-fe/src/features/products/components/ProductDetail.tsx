@@ -29,6 +29,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cartService } from "@/features/carts/services/cartService";
 import { Spinner } from "@/components/ui/spinner"; // Thêm Spinner
+import { useCartItemsCount } from "@/features/carts/context/CartItemsCountContext";
 
 interface ProductDetailProps {
   product: Product;
@@ -38,7 +39,7 @@ interface ProductDetailProps {
 
 export function ProductDetail({ product, reviews, isAlreadyInCart }: ProductDetailProps) {
   const router = useRouter(); // Hook để điều hướng
-  
+  const { refresh: refreshCartItemsCount } = useCartItemsCount();
   // State để quản lý trạng thái của nút
   // *** THAY ĐỔI: Khởi tạo state bằng prop nhận được từ server ***
   const [isAdded, setIsAdded] = useState(isAlreadyInCart);
@@ -59,6 +60,7 @@ export function ProductDetail({ product, reviews, isAlreadyInCart }: ProductDeta
       if (response.success) {
         toast.success(`Đã thêm ${product.title} vào giỏ!`);
         setIsAdded(true); // Thay đổi trạng thái nút
+        refreshCartItemsCount();
       } else {
         // Xử lý lỗi cụ thể
         if (response.statusCode === 401) {

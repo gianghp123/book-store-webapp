@@ -42,7 +42,7 @@ export const orderColumns: ColumnDef<Order>[] = [
     accessorKey: "totalAmount",
     header: "Total Amount",
     cell: ({ row }) => (
-      <div>${row.original.totalAmount.toFixed(2)}</div>
+      <div>${row.original.totalAmount}</div>
     ),
   },
   {

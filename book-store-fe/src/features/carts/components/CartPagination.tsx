@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Pagination,
   PaginationContent,
@@ -9,8 +8,9 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"; 
+} from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
 interface CartPaginationProps {
   current: number;
@@ -18,7 +18,7 @@ interface CartPaginationProps {
   onPageChange: (page: number) => void;
   onPrevious: () => void;
   onNext: () => void;
-  className?: string; 
+  className?: string;
 }
 
 export function CartPagination({
@@ -29,7 +29,6 @@ export function CartPagination({
   onNext,
   className,
 }: CartPaginationProps) {
-
   const getPaginationItems = () => {
     const pages: React.ReactNode[] = [];
     if (pageCount <= 5) {
@@ -97,7 +96,7 @@ export function CartPagination({
             isActive={current === pageCount}
             onClick={(e) => {
               e.preventDefault();
-              onPageChange(pageCount); 
+              onPageChange(pageCount);
             }}
           >
             {pageCount}
@@ -117,12 +116,10 @@ export function CartPagination({
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                onPrevious(); 
+                onPrevious();
               }}
               aria-disabled={current === 1}
-              className={
-                current === 1 ? "pointer-events-none opacity-50" : ""
-              }
+              className={current === 1 ? "pointer-events-none opacity-50" : ""}
             />
           </PaginationItem>
 
@@ -133,13 +130,11 @@ export function CartPagination({
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                onNext(); 
+                onNext();
               }}
               aria-disabled={current === pageCount}
               className={
-                current === pageCount
-                  ? "pointer-events-none opacity-50"
-                  : ""
+                current === pageCount ? "pointer-events-none opacity-50" : ""
               }
             />
           </PaginationItem>

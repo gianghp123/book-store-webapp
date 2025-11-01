@@ -7,3 +7,8 @@ export enum SearchType {
     NORMAL = "NORMAL",
     SMART = "SMART",
 }
+
+export enum SortOrder {
+    ASC = 'asc',
+    DESC = 'desc'
+}

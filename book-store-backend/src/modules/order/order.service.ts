@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OrderStatus } from 'src/core/enums/order-status.enum';
 import { Repository } from 'typeorm';
 import { PaginationQueryDto } from '../../core/dto/pagination-query.dto';
 import { CartItem } from '../cart/entities/cart-item.entity';
@@ -32,7 +33,7 @@ export class OrderService {
     private productRepository: Repository<Product>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async createOrder(
     userId: string,
@@ -47,7 +48,7 @@ export class OrderService {
     });
 
     if (!createOrderDto.items?.length) {
-      throw new BadRequestException("Order must include at least one item.");
+      throw new BadRequestException('Order must include at least one item.');
     }
 
     const existingOrderItems = await this.orderItemRepository.find({
@@ -55,7 +56,9 @@ export class OrderService {
       relations: ['product'],
     });
 
-    const existedProductIds = new Set(existingOrderItems.map(i => i.product.id));
+    const existedProductIds = new Set(
+      existingOrderItems.map((i) => i.product.id),
+    );
 
     const orderItems: OrderItem[] = [];
 
@@ -70,14 +73,14 @@ export class OrderService {
 
       if (existedProductIds.has(product.id)) {
         throw new BadRequestException(
-          `Sản phẩm "${product.title}" đã nằm trong đơn hàng trước đó, không thể đặt lại.`
+          `Product "${product.title}" already exists in the order.`,
         );
       }
 
       // *** BẮT ĐẦU SỬA LỖI ***
       // Ép kiểu product.price (string) thành Number
       const itemPrice = Number(product.price);
-      
+
       orderItems.push(
         this.orderItemRepository.create({
           product,
@@ -93,19 +96,19 @@ export class OrderService {
     const order = this.orderRepository.create({
       user,
       totalAmount, // totalAmount bây giờ là Number
-      status: 'Success',
+      status: OrderStatus.COMPLETED,
     });
     // Dòng này (trước đây là 92) sẽ chạy đúng
     await this.orderRepository.save(order);
 
-    orderItems.forEach(i => (i.order = order));
+    orderItems.forEach((i) => (i.order = order));
     await this.orderItemRepository.save(orderItems);
 
     if (cart && cart.items?.length > 0) {
-      const productIds = orderItems.map(i => i.product.id);
+      const productIds = orderItems.map((i) => i.product.id);
 
-      const itemsToRemove = cart.items.filter(ci =>
-        productIds.includes(ci.product.id)
+      const itemsToRemove = cart.items.filter((ci) =>
+        productIds.includes(ci.product.id),
       );
 
       if (itemsToRemove.length > 0) {
@@ -116,16 +119,11 @@ export class OrderService {
     // Tải lại đơn hàng để có 'items' và 'user'
     const completeOrder = await this.orderRepository.findOne({
       where: { id: order.id },
-      relations: [
-        'items', 
-        'items.product', 
-        'items.product.book', 
-        'user'
-      ],
+      relations: ['items', 'items.product', 'items.product.book', 'user'],
     });
 
     if (!completeOrder) {
-      throw new NotFoundException('Đơn hàng đã được tạo nhưng không thể tải lại.');
+      throw new NotFoundException('Order not found');
     }
 
     return OrderResponseDto.fromEntity(completeOrder);
@@ -169,7 +167,6 @@ export class OrderService {
     return paginatedOrdersDto;
   }
 
-
   async cancelOrder(cancelOrderDto: CancelOrderDto): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
       where: { id: cancelOrderDto.orderId },
@@ -180,12 +177,12 @@ export class OrderService {
       throw new NotFoundException('Order not found');
     }
 
-    if (order.status === 'Đã hủy') {
+    if (order.status === OrderStatus.CANCELLED) {
       throw new BadRequestException('Order has already been cancelled');
     }
 
     // Update order status
-    order.status = 'Đã hủy'; // Cancelled
+    order.status = OrderStatus.CANCELLED;
     await this.orderRepository.save(order);
 
     // Restore product stock
@@ -225,6 +222,6 @@ export class OrderService {
       totalPages: Math.ceil(total / limit),
     };
 
-    return paginatedOrdersDto;  
+    return paginatedOrdersDto;
   }
 }

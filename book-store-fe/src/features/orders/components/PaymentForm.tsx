@@ -1,23 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { toast } from "sonner";
-import { useForm, FormProvider, Controller } from "react-hook-form";
+import { ImageWithFallback } from "@/components/ImageWithFallBack";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { Info, Lock } from "lucide-react";
-import { ImageWithFallback } from "@/components/ImageWithFallBack";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
-import { orderService } from "../services/orderService";
+import { Info, Lock } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { Controller, FormProvider, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { CreateOrderDto } from "../dtos/request/order.dto";
+import { orderService } from "../services/orderService";
 
 interface SavedCard {
   cardType: string;
@@ -27,8 +27,7 @@ interface SavedCard {
 }
 
 interface PaymentFormProps {
-  cartData: CartResponse;
-  imageFallbackUrl: string;
+  cartData?: CartResponse;
   title?: string;
   secureBadgeText?: string;
   creditCardTabLabel?: string;
@@ -68,7 +67,6 @@ type PaymentFormData = {
 
 const PaymentForm1 = ({
   cartData,
-  imageFallbackUrl,
   title = "Complete Your Purchase",
   secureBadgeText = "Secure SSL Encryption",
   creditCardTabLabel = "Credit Card",
@@ -121,10 +119,18 @@ const PaymentForm1 = ({
     },
   });
 
+  if (!cartData) {
+    return <div>Cart not found</div>;
+  }
+
+  if (cartData.items.length === 0) {
+    return <div>Cart is empty, please add some items to cart</div>;
+  }
+
   const subtotal = useMemo(
     () =>
       cartData.items.reduce(
-        (acc, item) => acc + (parseFloat(item.price as any) || 0),
+        (acc, item) => acc + (parseFloat(item.product.price as any) || 0),
         0
       ),
     [cartData.items]
@@ -136,7 +142,8 @@ const PaymentForm1 = ({
     setIsProcessing(true);
 
     const orderDto: CreateOrderDto = {
-      items: cartData.items.map((item) => ({ productId: item.productId })),
+      cartId: cartData.id,
+      items: cartData.items.map((item) => ({ productId: item.product.id })),
     };
 
     try {
@@ -144,7 +151,10 @@ const PaymentForm1 = ({
 
       if (response.success && response.data) {
         toast.success("Đặt hàng thành công!");
-        sessionStorage.setItem("confirmationOrder", JSON.stringify(response.data));
+        sessionStorage.setItem(
+          "confirmationOrder",
+          JSON.stringify(response.data)
+        );
         sessionStorage.setItem("confirmationForm", JSON.stringify(formData));
         router.push(`/confirmation/${response.data.id}`);
       } else {
@@ -209,7 +219,8 @@ const PaymentForm1 = ({
                               <RadioGroupItem value="saved" id="saved" />
                               <div>
                                 <p className="text-sm font-medium text-foreground">
-                                  {savedCard.cardType} ending in {savedCard.lastFour}
+                                  {savedCard.cardType} ending in{" "}
+                                  {savedCard.lastFour}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   Expires {savedCard.expiry}
@@ -235,7 +246,11 @@ const PaymentForm1 = ({
                         render={({ field }) => (
                           <div className="space-y-2">
                             <Label htmlFor="name">{cardholderNameLabel}</Label>
-                            <Input id="name" placeholder={cardholderNamePlaceholder} {...field} />
+                            <Input
+                              id="name"
+                              placeholder={cardholderNamePlaceholder}
+                              {...field}
+                            />
                           </div>
                         )}
                       />
@@ -246,7 +261,11 @@ const PaymentForm1 = ({
                         render={({ field }) => (
                           <div className="space-y-2">
                             <Label htmlFor="card">{cardNumberLabel}</Label>
-                            <Input id="card" placeholder={cardNumberPlaceholder} {...field} />
+                            <Input
+                              id="card"
+                              placeholder={cardNumberPlaceholder}
+                              {...field}
+                            />
                           </div>
                         )}
                       />
@@ -258,7 +277,11 @@ const PaymentForm1 = ({
                           render={({ field }) => (
                             <div className="space-y-2">
                               <Label htmlFor="expiry">{expiryDateLabel}</Label>
-                              <Input id="expiry" placeholder={expiryDatePlaceholder} {...field} />
+                              <Input
+                                id="expiry"
+                                placeholder={expiryDatePlaceholder}
+                                {...field}
+                              />
                             </div>
                           )}
                         />
@@ -269,7 +292,11 @@ const PaymentForm1 = ({
                             <div className="space-y-2">
                               <Label htmlFor="cvv">{cvvLabel}</Label>
                               <div className="relative">
-                                <Input id="cvv" placeholder={cvvPlaceholder} {...field} />
+                                <Input
+                                  id="cvv"
+                                  placeholder={cvvPlaceholder}
+                                  {...field}
+                                />
                                 <Info className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                               </div>
                             </div>
@@ -283,7 +310,11 @@ const PaymentForm1 = ({
                         render={({ field }) => (
                           <div className="space-y-2">
                             <Label htmlFor="zip">{zipCodeLabel}</Label>
-                            <Input id="zip" placeholder={zipCodePlaceholder} {...field} />
+                            <Input
+                              id="zip"
+                              placeholder={zipCodePlaceholder}
+                              {...field}
+                            />
                           </div>
                         )}
                       />
@@ -291,7 +322,10 @@ const PaymentForm1 = ({
                       <div className="space-y-2">
                         <Label htmlFor="promo">{promoCodeLabel}</Label>
                         <div className="flex gap-2">
-                          <Input id="promo" placeholder={promoCodePlaceholder} />
+                          <Input
+                            id="promo"
+                            placeholder={promoCodePlaceholder}
+                          />
                           <Button variant="outline" type="button">
                             {applyButtonLabel}
                           </Button>
@@ -305,8 +339,14 @@ const PaymentForm1 = ({
                       className="w-full"
                       disabled={isProcessing}
                     >
-                      {isProcessing ? <Spinner className="mr-2" /> : <Lock className="mr-2 h-4 w-4" />}
-                      {isProcessing ? "Đang xử lý..." : `Pay $${total.toFixed(2)}`}
+                      {isProcessing ? (
+                        <Spinner className="mr-2" />
+                      ) : (
+                        <Lock className="mr-2 h-4 w-4" />
+                      )}
+                      {isProcessing
+                        ? "Đang xử lý..."
+                        : `Pay $${total.toFixed(2)}`}
                     </Button>
                   </form>
                 </TabsContent>
@@ -320,8 +360,12 @@ const PaymentForm1 = ({
                       height={40}
                       className="h-10 w-auto"
                     />
-                    <p className="text-center text-muted-foreground">{paypalRedirectMessage}</p>
-                    <Button className="w-full">{continueWithPaypalButtonLabel}</Button>
+                    <p className="text-center text-muted-foreground">
+                      {paypalRedirectMessage}
+                    </p>
+                    <Button className="w-full">
+                      {continueWithPaypalButtonLabel}
+                    </Button>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -341,24 +385,27 @@ const PaymentForm1 = ({
                       <div key={item.id} className="flex items-center gap-4">
                         <div className="relative h-16 w-16">
                           <ImageWithFallback
-                            src={item.imageUrl}
-                            alt={item.title}
+                            src={item.product.image}
+                            alt={item.product.title}
                             fill
                             className="rounded-lg border object-contain"
-                            fallbackSrc={imageFallbackUrl}
-                            unoptimized
                           />
                         </div>
                         <div className="flex-1">
                           <p className="line-clamp-1 text-sm font-medium text-foreground">
-                            {item.title}
+                            {item.product.title}
                           </p>
                           <p className="line-clamp-1 text-sm text-muted-foreground">
-                            {item.authors?.map((a) => a.name).join(", ") || "Unknown Author"}
+                            {item.product.authors
+                              ?.map((a) => a.name)
+                              .join(", ") || "Unknown Author"}
                           </p>
                         </div>
                         <p className="text-sm font-medium">
-                          ${(parseFloat(item.price as any) || 0).toFixed(2)}
+                          $
+                          {(parseFloat(item.product.price as any) || 0).toFixed(
+                            2
+                          )}
                         </p>
                       </div>
                     ))}
@@ -383,7 +430,9 @@ const PaymentForm1 = ({
 
                   <div className="flex items-center gap-2 rounded-lg bg-accent p-4">
                     <Info className="h-5 w-5 text-primary" />
-                    <p className="text-sm text-muted-foreground">{moneyBackGuaranteeMessage}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {moneyBackGuaranteeMessage}
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 pt-4">
@@ -399,7 +448,9 @@ const PaymentForm1 = ({
                     ))}
                   </div>
 
-                  <p className="text-xs text-muted-foreground">{securityFooterText}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {securityFooterText}
+                  </p>
                 </div>
               </div>
             </CardContent>

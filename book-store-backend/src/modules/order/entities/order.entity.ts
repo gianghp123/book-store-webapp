@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from 'src/modules/user/entities/user.entity';
 import { OrderItem } from './order-item.entity';
+import { OrderStatus } from 'src/core/enums/order-status.enum';
 
 @Entity('orders')
 export class Order {
@@ -25,8 +26,8 @@ export class Order {
   @Column({ name: 'total_amount', type: 'decimal', precision: 10, scale: 2 })
   totalAmount: number;
 
-  @Column({ default: 'Completed' })
-  status: string;
+  @Column({ default: OrderStatus.COMPLETED })
+  status: OrderStatus;
 
   @OneToMany(() => OrderItem, (item) => item.order)
   items: OrderItem[];

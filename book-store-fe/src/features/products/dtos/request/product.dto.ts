@@ -1,4 +1,4 @@
-import { SearchType } from "@/lib/constants/enums";
+import { SearchType, SortOrder } from "@/lib/constants/enums";
 
 // Product creation request
 export interface CreateProductDto {
@@ -20,7 +20,7 @@ export interface ProductFilterQueryDto {
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC'; // enum: ASC, DESC
+  sortOrder?: SortOrder; // enum: ASC, DESC
   searchType?: SearchType;
 }
 

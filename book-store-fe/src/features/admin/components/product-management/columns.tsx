@@ -14,7 +14,7 @@ export const productColumns: ColumnDef<Product>[] = [
     cell: ({ row }) => (
       <div className="w-12 h-16 relative">
       <ImageWithFallback
-        src={row.original.image || `https://covers.openlibrary.org/b/isbn/${row.original.book?.isbn}-M.jpg`}
+        src={row.original.image || `https://covers.openlibrary.org/b/isbn/${row.original.isbn}-S.jpg`}
         alt={row.original.title}
         fetchPriority="high"
         fill  
@@ -59,20 +59,12 @@ export const productColumns: ColumnDef<Product>[] = [
     header: "Categories",
     cell: ({ row }) => (
       <div className="flex flex-wrap gap-1">
-        {row.original.categories?.map(cat => (
+        {row.original.categories?.slice(0, 2).map(cat => (
           <Badge key={cat.id} variant="secondary">{cat.name}</Badge>
         ))}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "authors",
-    header: "Authors",
-    cell: ({ row }) => (
-      <div className="flex flex-wrap gap-1">
-        {row.original.authors?.map(author => (
-          <Badge key={author.id} variant="outline">{author.name}</Badge>
-        ))}
+        {row.original.categories?.length > 2 && (
+          <Badge variant="secondary">+{row.original.categories.length - 2}</Badge>
+        )}
       </div>
     ),
   },

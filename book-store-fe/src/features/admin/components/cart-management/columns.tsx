@@ -33,7 +33,7 @@ export const cartColumns: ColumnDef<CartResponse>[] = [
     accessorKey: "total",
     header: "Total Value",
     cell: ({ row }) => (
-      <div>${row.original.total.toFixed(2)}</div>
+      <div>${row.original.total}</div>
     ),
   },
   {

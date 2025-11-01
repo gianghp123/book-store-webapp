@@ -28,6 +28,7 @@ export function CategoryManagement() {
     setCurrentPage,
   } = useTable<ProductCategory, HttpError>({
     resource: "categories",
+    dataProviderName: "admin",
     pagination: {
       pageSize: 10,
     },

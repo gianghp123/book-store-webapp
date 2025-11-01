@@ -46,7 +46,7 @@ export function OrderConfirmation1() {
     return (
       <section className="bg-background py-8 antialiased">
         <div className="mx-auto flex h-60 max-w-2xl items-center justify-center px-4 2xl:px-0">
-          <Spinner size="lg" />
+          <Spinner />
         </div>
       </section>
     );

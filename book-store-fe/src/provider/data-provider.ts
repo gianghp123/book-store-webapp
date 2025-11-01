@@ -2,9 +2,11 @@
 import { apiFetch } from "@/lib/api-fetch";
 import { DataProvider } from "@refinedev/core";
 
-export const dataProvider = (): DataProvider => ({
+export const dataProvider = (withCredentials: boolean): DataProvider => ({
   getOne: async ({ id, resource }) => {
-    const { data } = await apiFetch(`/${resource}/${id}`);
+    const { data } = await apiFetch(`/${resource}/${id}`, {
+      withCredentials,
+    });
     return {
       data,
     };
@@ -14,6 +16,7 @@ export const dataProvider = (): DataProvider => ({
     const { data, success, message } = await apiFetch(`/${resource}`, {
       method: "POST",
       body: JSON.stringify(variables),
+      withCredentials,
     });
 
     if (!success) {
@@ -43,6 +46,7 @@ export const dataProvider = (): DataProvider => ({
         sortBy: sort?.field,
         sortOrder: sort?.order,
       },
+      withCredentials,
     });
 
     // Đảm bảo trả về cấu trúc { data: [], total: number }

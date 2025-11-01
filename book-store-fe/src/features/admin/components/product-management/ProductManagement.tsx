@@ -18,6 +18,7 @@ import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { productColumns } from "./columns";
+import { SortOrder } from "@/lib/constants/enums";
 export function ProductManagement() {
   const {
     result,
@@ -28,11 +29,19 @@ export function ProductManagement() {
     setCurrentPage,
   } = useTable<Product>({
     resource: "products",
+    dataProviderName: "admin",
     pagination: {
       pageSize: 10,
     },
+    sorters: {
+      initial: [
+        {
+          field: "id",
+          order: SortOrder.DESC,
+        },
+      ],
+    },
     syncWithLocation: true,
-    
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);

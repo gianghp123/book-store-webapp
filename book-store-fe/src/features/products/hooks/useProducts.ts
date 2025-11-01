@@ -1,10 +1,10 @@
 import { useSearchContext } from "@/features/search-bar/providers/SearchContextProvider";
-import { SearchType } from "@/lib/constants/enums";
+import { SearchType, SortOrder } from "@/lib/constants/enums";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProductFilterQueryDto } from "../dtos/request/product.dto";
 import { Product } from "../dtos/response/product-response.dto";
-import { productService } from "../services/productService";
+import { productService } from "../services/products.service";
 
 interface UseProductsReturn {
   products: Product[];
@@ -35,7 +35,7 @@ export const useProducts = (): UseProductsReturn => {
     page: 1,
     limit: 16,
     sortBy: "id",
-    sortOrder: "DESC",
+    sortOrder: SortOrder.DESC,
     query: "",
     categoryIds: [],
     minPrice: undefined,
@@ -46,8 +46,8 @@ export const useProducts = (): UseProductsReturn => {
   const getInitialFilters = (): ProductFilterQueryDto => ({
     page: Number(searchParams.get("page")) || 1,
     limit: Number(searchParams.get("limit")) || 16,
-    sortBy: searchParams.get("sortBy") || "id",
-    sortOrder: (searchParams.get("sortOrder") as "ASC" | "DESC") || "DESC",
+    sortBy: searchParams.get("sortBy") || "createdAt",
+    sortOrder: (searchParams.get("sortOrder") as SortOrder) || SortOrder.DESC,
     query: searchParams.get("query") || "",
     categoryIds: searchParams.get("categoryIds")?.split(",") || [],
     minPrice: Number(searchParams.get("minPrice")) || undefined,

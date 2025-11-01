@@ -3,7 +3,7 @@ import { ProductCatalogue } from "@/features/products/components/ProductCatalogu
 import { dataProvider } from "@/provider/data-provider";
 
 async function getALlCategories() {
-  const response = await dataProvider().getList<ProductCategory>({
+  const response = await dataProvider(false).getList<ProductCategory>({
     resource: "categories",
     pagination: {
       pageSize: 10000,

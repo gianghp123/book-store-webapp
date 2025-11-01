@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useProducts } from "../hooks/useProducts";
 import { ProductCard } from "./ProductCard";
 import { SortDropdown, SortOption } from "./SortDropDown";
+import { SortOrder } from "@/lib/constants/enums";
 
 export function ProductCatalogue({
   categories,
@@ -33,14 +34,14 @@ export function ProductCatalogue({
 
   const sortMapping: Record<
     SortOption,
-    { field: string; order: "ASC" | "DESC" }
+    { field: string; order: SortOrder }
   > = {
-    relevance: { field: "id", order: "DESC" },
-    "price-low-high": { field: "price", order: "ASC" },
-    "price-high-low": { field: "price", order: "DESC" },
-    rating: { field: "rating", order: "DESC" },
-    newest: { field: "createdAt", order: "DESC" },
-    name: { field: "title", order: "ASC" },
+    relevance: { field: "id", order: SortOrder.DESC },
+    "price-low-high": { field: "price", order: SortOrder.ASC },
+    "price-high-low": { field: "price", order: SortOrder.DESC },
+    rating: { field: "rating", order: SortOrder.DESC },
+    newest: { field: "createdAt", order: SortOrder.DESC },
+    name: { field: "title", order: SortOrder.ASC },
   };
 
   const {
