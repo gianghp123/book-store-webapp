@@ -4,6 +4,7 @@ import { RegisterDto } from "@/features/auth/dtos/request/register.dto";
 import { AuthResponse } from "@/features/auth/dtos/response/auth-response.dto";
 import { UserResponse } from "@/features/users/dtos/response/user-response.dto";
 import { apiFetch } from "@/lib/api-fetch";
+import { Role } from "@/lib/constants/enums";
 import {
   getAuthTokenServer,
   getUserServer,
@@ -15,46 +16,44 @@ import { AuthProvider } from "@refinedev/core";
 export const authProvider: AuthProvider = {
   // THÊM PHƯƠNG THỨC REGISTER NÀY VÀO
   register: async (params: RegisterDto) => {
-      const { data, success, message } = await apiFetch<UserResponse>(
-        "/auth/register",
-        {
-          method: "POST",
-          body: JSON.stringify(params),
-        }
-      );
-
-      if (!success) {
-        throw new Error(message || "Register failed");
+    const { data, success, message } = await apiFetch<UserResponse>(
+      "/auth/register",
+      {
+        method: "POST",
+        body: JSON.stringify(params),
       }
+    );
 
-      return {
-        success: true,
-        redirectTo: "/login", // Chuyển hướng về trang login
-      };
+    if (!success) {
+      throw new Error(message || "Register failed");
+    }
+
+    return {
+      success: true,
+      redirectTo: "/login", // Chuyển hướng về trang login
+    };
   },
 
   // THÊM PHƯƠNG THỨC LOGIN (ĐỂ HOÀN THIỆN)
   login: async (params: LoginDto) => {
-      const { data, success, message } = await apiFetch<AuthResponse>(
-        "/auth/login",
-        {
-          method: "POST",
-          body: JSON.stringify(params),
-        }
-      );
-
-      if (!success || !data?.accessToken) {
-        throw new Error(
-          message || "Đăng nhập thất bại, không nhận được token."
-        );
+    const { data, success, message } = await apiFetch<AuthResponse>(
+      "/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify(params),
       }
+    );
 
-      await setAuthTokenServer(data);
+    if (!success || !data?.accessToken) {
+      throw new Error(message || "Đăng nhập thất bại, không nhận được token.");
+    }
 
-      return {
-        success: true,
-        redirectTo: "/",
-      };
+    await setAuthTokenServer(data);
+
+    return {
+      success: true,
+      redirectTo: "/",
+    };
   },
 
   // CÁC PHƯƠNG THỨC CẦN THIẾT KHÁC (ĐỂ TRỐNG)
@@ -63,11 +62,14 @@ export const authProvider: AuthProvider = {
     return { success: true, redirectTo: "/" };
   },
 
-  check: async () => {
+  check: async (params?: { role?: Role }) => {
     const token = await getAuthTokenServer();
     if (token) {
       const user = await getUserServer();
       if (!user) {
+        return { authenticated: false, redirectTo: "/" };
+      }
+      if (params && params.role && user.role !== params.role) {
         return { authenticated: false, redirectTo: "/" };
       }
       return { authenticated: true };
@@ -87,6 +89,8 @@ export const authProvider: AuthProvider = {
         id: user.id,
         name: user.fullName,
         role: user.role,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
       };
     }
     return null;

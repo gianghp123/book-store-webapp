@@ -45,9 +45,6 @@ export const dataProvider = (): DataProvider => ({
       },
     });
 
-    // Thêm log để kiểm tra response từ apiFetch
-    console.log(`dataProvider getList response for resource "${resource}":`, response);
-
     // Đảm bảo trả về cấu trúc { data: [], total: number }
     return {
       data: response.data || [], // Lấy mảng dữ liệu

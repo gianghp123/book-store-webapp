@@ -21,8 +21,7 @@ export class OrderController {
   @Get('admin')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  // @Roles(Role.ADMIN)
-  @Public()
+  @Roles(Role.ADMIN)
   async getAllOrders(@Query() paginationQuery: PaginationQueryDto): Promise<PaginatedOrdersDto> {
     // TODO: Implement get all orders (admin functionality)
     return this.orderService.getAllOrders(paginationQuery);

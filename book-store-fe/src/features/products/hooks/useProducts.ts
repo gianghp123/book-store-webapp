@@ -20,10 +20,16 @@ interface UseProductsReturn {
 }
 
 export const useProducts = (): UseProductsReturn => {
-  const { searchQuery, searchType, setSearchQuery, setSearchType, setSearchInput } = useSearchContext();
+  const {
+    searchQuery,
+    searchType,
+    setSearchQuery,
+    setSearchInput,
+  } = useSearchContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+
 
   const defaultFilters: ProductFilterQueryDto = {
     page: 1,
@@ -46,7 +52,7 @@ export const useProducts = (): UseProductsReturn => {
     categoryIds: searchParams.get("categoryIds")?.split(",") || [],
     minPrice: Number(searchParams.get("minPrice")) || undefined,
     maxPrice: Number(searchParams.get("maxPrice")) || undefined,
-    searchType: searchParams.get("searchType") as SearchType || searchType,
+    searchType: (searchParams.get("searchType") as SearchType) || searchType,
   });
 
   const [filters, setFilters] = useState<ProductFilterQueryDto>(
@@ -58,48 +64,47 @@ export const useProducts = (): UseProductsReturn => {
   const [error, setError] = useState<Error | null>(null);
   const [totalPages, setTotalPages] = useState(0);
 
-  const fetchProducts = 
-    async (page?: number) => {
-      setLoading(true);
-      setError(null);
+  const fetchProducts = async (page?: number) => {
+    setLoading(true);
+    setError(null);
 
-      const currentPage = page || filters.page;
+    const currentPage = page || filters.page;
 
-      try {
-        const response = await productService.getProducts({
-          ...filters,
-          page: currentPage,
-        });
+    try {
+      const response = await productService.getProducts({
+        ...filters,
+        page: currentPage,
+      });
 
-        if (response.success && response.data) {
-          setProducts(response.data);
-          setTotal(response.pagination?.total || 0);
-          setTotalPages(response.pagination?.totalPages || 0);
-          // update filters.page after fetch
-          setFilters((prev) => ({
-            ...prev,
-            page: response.pagination?.page || 1,
-          }));
-        } else {
-          setError(new Error(response.message || "Failed to fetch products"));
-          setProducts([]);
-          setTotal(0);
-        }
-      } catch (err) {
-        setError(err as Error);
+      if (response.success && response.data) {
+        setProducts(response.data);
+        setTotal(response.pagination?.total || 0);
+        setTotalPages(response.pagination?.totalPages || 0);
+        // update filters.page after fetch
+        setFilters((prev) => ({
+          ...prev,
+          page: response.pagination?.page || 1,
+        }));
+      } else {
+        setError(new Error(response.message || "Failed to fetch products"));
         setProducts([]);
         setTotal(0);
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      setError(err as Error);
+      setProducts([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+      setSearchQuery("");
     }
+  };
 
   useEffect(() => {
     const hasParams = Array.from(searchParams.keys()).length > 0;
     if (!hasParams && pathname === "/") {
       setFilters(defaultFilters);
       setSearchQuery("");
-      setSearchType(SearchType.NORMAL);
       setSearchInput("");
     }
   }, [pathname, searchParams]);
@@ -117,28 +122,37 @@ export const useProducts = (): UseProductsReturn => {
         params.set(key, value.toString());
       }
     });
-    router.replace(`${window.location.pathname}?${params.toString()}`);
+    console.log(params.toString());
+    router.replace(`/?${params.toString()}`);
   }, [
     filters.page,
     filters.limit,
     filters.sortBy,
     filters.sortOrder,
     filters.query,
-    filters.searchType,
     router,
   ]);
 
   useEffect(() => {
     if (!searchQuery) return;
-    setFilters((prev) => ({
-      ...prev,
-      query: searchQuery,
-      searchType,
-      page: 1,
-      categoryIds: [],
-      minPrice: undefined,
-      maxPrice: undefined,
-    }));
+    if (searchType === SearchType.SMART) {
+      setFilters((prev) => ({
+        ...prev,
+        query: searchQuery,
+        searchType,
+        page: 1,
+        categoryIds: [],
+        minPrice: undefined,
+        maxPrice: undefined,
+      }));
+    } else {
+      setFilters((prev) => ({
+        ...prev,
+        query: searchQuery,
+        searchType,
+        page: 1,
+      }));
+    }
   }, [searchQuery]);
 
   useEffect(() => {
@@ -149,7 +163,15 @@ export const useProducts = (): UseProductsReturn => {
 
   useEffect(() => {
     fetchProducts();
-  }, [filters.page, filters.limit, filters.sortBy, filters.sortOrder, filters.categoryIds, filters.minPrice, filters.maxPrice]);
+  }, [
+    filters.page,
+    filters.limit,
+    filters.sortBy,
+    filters.sortOrder,
+    filters.categoryIds,
+    filters.minPrice,
+    filters.maxPrice,
+  ]);
 
   const setCurrentPage = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));

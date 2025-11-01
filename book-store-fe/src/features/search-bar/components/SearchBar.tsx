@@ -19,6 +19,7 @@ import { Search, Sparkles } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useSearchContext } from "../providers/SearchContextProvider";
+import { useRouter } from "next/navigation";
 
 export function SearchBar() {
   const {
@@ -31,10 +32,12 @@ export function SearchBar() {
 
   const isSmart = searchType === SearchType.SMART;
 
+  const router = useRouter();
+
   const handleSubmit = (e: React.FormEvent) => {
-    console.log(searchInput);
     e.preventDefault();
     setSearchQuery(searchInput);
+    router.push("/");
   };
 
   return (

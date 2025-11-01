@@ -12,6 +12,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { ProductCategory } from "@/features/categories/dtos/response/category.dto";
+import { SearchType } from "@/lib/constants/enums";
 import { useTable } from "@refinedev/core";
 import Link from "next/link";
 
@@ -24,6 +25,7 @@ const CategoriesList = () => {
       },
       syncWithLocation: true,
     });
+
   return (
     <div>
       <div className="mb-8 flex items-center justify-between space-y-2">
@@ -33,10 +35,11 @@ const CategoriesList = () => {
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
         {result?.data?.map((category) => (
-          <Link href={`/`} key={category.id}>
-            <Card
-              className="flex items-center justify-center gap-0 p-4 transition-colors hover-shadow-purple-pink"
-            >
+          <Link
+            href={`/?categoryIds=${category.id}&searchType=${SearchType.NORMAL}`}
+            key={category.id}
+          >
+            <Card className="h-full flex items-center justify-center gap-0 p-4 transition-colors hover-shadow-purple-pink">
               <span className="text-sm font-medium">{category.name}</span>
               <Badge variant="secondary">{category.bookCount}</Badge>
             </Card>
