@@ -1,21 +1,23 @@
-"use client"; // ensure this is a client component for hooks
+"use client";
 
-import { Menu, Search, ShoppingCart, User } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, LayoutDashboard, BookMarked, Settings, LogOut,} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation"; // Next.js 13+
 import { SearchBar } from "../features/search-bar/components/SearchBar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { useGetIdentity, useLogout } from "@refinedev/core";
+import { UserResponse } from "@/features/users/dtos/response/user-response.dto";
+import { Role } from "@/lib/constants/enums";
 interface HeaderProps {
   cartItemsCount?: number;
   onMenuToggle?: () => void;
 }
 
 export function MainHeader({ cartItemsCount = 3, onMenuToggle }: HeaderProps) {
-  const pathname = usePathname(); // current path
+  const pathname = usePathname(); 
 
-  // helper to check if link is active
   const isActive = (href: string) => pathname === href;
 
   return (
@@ -84,9 +86,9 @@ export function MainHeader({ cartItemsCount = 3, onMenuToggle }: HeaderProps) {
               )}
             </Button>
           </Link>
-          <Button variant="ghost" size="sm">
-            <User className="h-5 w-5" />
-          </Button>
+            <Button variant="ghost" size="sm">
+              <User className="h-5 w-5" />
+            </Button>
         </div>
       </div>
     </header>
