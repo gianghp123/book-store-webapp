@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 
-export function keysToCamel(obj: any): any {
+export function keysToCamel(obj: any): Record<string, any> {
   if (isArray(obj)) return obj.map((v) => keysToCamel(v));
   if (isObject(obj)) {
     return Object.keys(obj).reduce((acc: Record<string, any>, key) => {

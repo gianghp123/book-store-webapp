@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useState } from "react";
 import { SearchType } from "@/lib/constants/enums";
 import { useSearchBar } from "../hooks/useSearchBar";
 
@@ -7,7 +7,8 @@ interface SearchContextType {
   setSearchQuery: (query: string) => void;
   searchType: SearchType;
   setSearchType: (type: SearchType) => void;
-  handleSearch: (query?: string, type?: SearchType) => void;
+  searchInput: string;
+  setSearchInput: (input: string) => void;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
@@ -17,7 +18,8 @@ interface SearchContextProviderProps {
 }
 
 export const SearchContextProvider = ({ children }: SearchContextProviderProps) => {
-  const { searchQuery, setSearchQuery, searchType, setSearchType, handleSearch } = useSearchBar();
+  const { searchQuery, setSearchQuery, searchType, setSearchType, searchInput, setSearchInput } = useSearchBar();
+  
 
   return (
     <SearchContext.Provider value={{
@@ -25,7 +27,8 @@ export const SearchContextProvider = ({ children }: SearchContextProviderProps) 
       setSearchQuery,
       searchType,
       setSearchType,
-      handleSearch
+      searchInput,
+      setSearchInput,
     }}>
       {children}
     </SearchContext.Provider>
