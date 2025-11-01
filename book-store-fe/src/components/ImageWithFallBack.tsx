@@ -72,7 +72,12 @@ export function ImageWithFallback(props: ImageWithFallbackProps) {
       src={currentSrc}
       alt={hasError ? 'Error loading image' : alt}
       onError={handleError}
-      {...rest} // Truyền tất cả các props còn lại của next/image (như fill, width, height, priority, sizes, className, style, v.v.)
+      
+      // *** THÊM DÒNG NÀY ĐỂ SỬA CẢ 2 LỖI ***
+      unoptimized={true}
+      // *** KẾT THÚC THAY ĐỔI ***
+
+      {...rest} // Truyền tất cả các props còn lại của next/image
     />
   )
 }

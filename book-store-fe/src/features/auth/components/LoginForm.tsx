@@ -27,7 +27,7 @@ const formSchema = z.object({
   email: z.email({ message: "Invalid email" }),
   password: z
     .string()
-    .min(4, { message: "Password must be at least 6 characters" }),
+    .min(4, { message: "Password must be at least 4 characters" }),
 });
 
 export function LoginForm({
@@ -100,7 +100,7 @@ export function LoginForm({
               <FormControl>
                 <Input
                   type="password"
-                  placeholder="At least 6 characters."
+                  placeholder="At least 4 characters."
                   {...field}
                 />
               </FormControl>

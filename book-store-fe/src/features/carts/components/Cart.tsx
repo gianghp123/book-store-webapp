@@ -1,42 +1,95 @@
-// Thêm 'use client' ở đầu tệp để sử dụng hook
 "use client";
 
+import { ImageWithFallback } from "@/components/ImageWithFallBack";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Trash2 } from "lucide-react";
-import Image from "next/image";
-import { CartResponse } from "../dtos/response/cart-response.dto";
-import Link from "next/link";
-import { useState } from "react";
-// Import component 'CartPagination'
-import { CartPagination } from "./CartPagination"; //
+import { Spinner } from "@/components/ui/spinner";
 import { Authenticated } from "@refinedev/core";
+import { ArrowRight, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { CartItem, CartResponse } from "../dtos/response/cart-response.dto";
+import { cartService } from "../services/cartService";
+import { CartPagination } from "./CartPagination";
 
 interface Props {
   cartResponse?: CartResponse;
 }
 
 const ShoppingCart1Page = ({ cartResponse }: Props) => {
-  // Giữ toàn bộ state và logic tính toán ở component cha
+  const [items, setItems] = useState(cartResponse?.items || []);
   const [current, setCurrent] = useState(1);
   const itemsPerPage = 3;
-  const totalItems = cartResponse?.items?.length || 0;
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [itemToConfirmDelete, setItemToConfirmDelete] =
+    useState<CartItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const totalItems = items.length;
   const pageCount = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (current - 1) * itemsPerPage;
   const endIndex = current * itemsPerPage;
-  const currentItems = cartResponse?.items.slice(startIndex, endIndex) || [];
 
-  const subtotal = cartResponse?.items.reduce(
-    (acc, item) => acc + item.product.price,
-    0
-  );
+  const currentItems = useMemo(() => {
+    return items.slice(startIndex, endIndex);
+  }, [items, startIndex, endIndex]);
+
+  const subtotal = useMemo(() => {
+    return items.reduce(
+      (acc, item) => acc + (parseFloat(item.product.price as any) || 0),
+      0
+    );
+  }, [items]);
 
   const handlePageChange = (page: number) => setCurrent(page);
   const handlePrevious = () => setCurrent((p) => Math.max(p - 1, 1));
   const handleNext = () => setCurrent((p) => Math.min(p + 1, pageCount));
+
+  const handleOpenConfirm = (item: CartItem) => {
+    setItemToConfirmDelete(item);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToConfirmDelete) return;
+
+    const { product } = itemToConfirmDelete;
+    setIsDeleting(true);
+
+    try {
+      const response = await cartService.removeItemFromCart({
+        productId: product.id,
+      });
+
+      if (response.success) {
+        toast.success("Product removed from cart successfully.");
+        setItems((currentItems) =>
+          currentItems.filter((item) => item.product.id !== product.id)
+        );
+        setIsConfirmOpen(false);
+        setItemToConfirmDelete(null);
+      } else {
+        toast.error(response.message || "Delete failed, please try again.");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Authenticated key="cart">
@@ -45,53 +98,80 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <div className="space-y-4 min-h-[416px]">
-              {currentItems.map((item) => (
-                <Card key={item.id}>
-                  <CardContent className="flex gap-4 p-4">
-                    <div className="relative h-24 w-24">
-                      <Image
-                        src={
-                          item.product.image ||
-                          `https://covers.openlibrary.org/b/isbn/${item.product.isbn}-M.jpg`
-                        }
-                        alt={item.product.title}
-                        fill
-                        className="object-contain"
-                      />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between py-1">
-                      <div>
-                        <h3 className="font-medium">{item.product.title}</h3>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {item.product.authors.map((author) => (
-                            <Badge key={author.id} variant="outline">
-                              {author.name}
-                            </Badge>
-                          ))}
-                          {item.product.categories.map((category) => (
-                            <Badge key={category.id} variant="secondary">
-                              {category.name}
-                            </Badge>
-                          ))}
+              {totalItems === 0 ? (
+                <Card>
+                  <CardContent className="p-10 text-center text-muted-foreground">
+                    Your shopping cart is empty.
+                  </CardContent>
+                </Card>
+              ) : (
+                currentItems.map((item) => (
+                  <Card key={item.id}>
+                    <CardContent className="flex gap-4 p-4">
+                      <div className="relative h-24 w-24">
+                        <ImageWithFallback
+                          src={
+                            item.product.image ||
+                            `https://covers.openlibrary.org/b/isbn/${item.product.isbn}-M.jpg`
+                          }
+                          alt={item.product.title}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <div className="flex-1 flex flex-col justify-between py-1">
+                        <div>
+                          <Link href={`/products/${item.product.id}`}>
+                            <h3 className="font-medium text-lg hover:text-primary transition-colors cursor-pointer">
+                              {item.product.title}
+                            </h3>
+                          </Link>
+
+                          {item.product.authors &&
+                            item.product.authors.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {item.product.authors.map((author) => (
+                                  <Badge key={author.id} variant="outline">
+                                    {author.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                          {item.product.categories &&
+                            item.product.categories.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {item.product.categories.map((category) => (
+                                  <Badge key={category.id} variant="secondary">
+                                    {category.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                         </div>
                       </div>
 
-                      <p className="text-sm text-muted-foreground pt-2">
-                        Ngày tạo: {item.product.createdAt}
-                      </p>
-                    </div>
-
-                    <div className="text-right flex flex-col justify-between">
-                      <span className="font-bold text-lg">
-                        ${item.product.price}
-                      </span>
-                      <Button variant="ghost" size="sm" className="relative">
-                        <Trash2 className="size-6 text-red-500" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="text-right flex flex-col justify-between">
+                        <span className="font-bold text-lg">
+                          $
+                          {(parseFloat(item.product.price as any) || 0).toFixed(
+                            2
+                          )}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="relative"
+                          onClick={() => handleOpenConfirm(item)}
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="size-6 text-red-500" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
 
             {pageCount > 1 && (
@@ -101,12 +181,11 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
                 onPageChange={handlePageChange}
                 onPrevious={handlePrevious}
                 onNext={handleNext}
-                className="justify-start ml-55" // Giữ nguyên class 'ml-55' của bạn
+                className="justify-start ml-55"
               />
             )}
           </div>
 
-          {/* Cột phải: Order summary (Không thay đổi) */}
           <div className="space-y-6">
             <Card>
               <CardContent className="p-4">
@@ -116,20 +195,24 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
                     <span className="text-muted-foreground">
                       Original price
                     </span>
-                    <span>${subtotal}</span>
+                    <span>${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-destructive">
                     <span>Discount</span>
-                    <span>-$0</span>
+                    <span>-$0.00</span>
                   </div>
                   <Separator className="my-2" />
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span>${subtotal}</span>
+                    <span>${subtotal.toFixed(2)}</span>
                   </div>
                 </div>
                 <Link href="/payment">
-                  <Button className="mt-4 w-full" size="lg">
+                  <Button
+                    className="mt-4 w-full"
+                    size="lg"
+                    disabled={totalItems === 0}
+                  >
                     Proceed to Payment
                   </Button>
                 </Link>
@@ -155,13 +238,46 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
             </Card>
           </div>
         </div>
+
+        <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Delete</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete
+                <span className="font-bold">
+                  {" "}
+                  "{itemToConfirmDelete?.product.title}"{" "}
+                </span>
+                from cart?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setItemToConfirmDelete(null)}
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Spinner className="mr-2" /> : "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Authenticated>
   );
 };
 
-const ShoppingCart1 = () => {
-  return <ShoppingCart1Page />;
+const ShoppingCart1 = (props: Props) => {
+  return <ShoppingCart1Page {...props} />;
 };
 
 export { ShoppingCart1 };

@@ -11,23 +11,68 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, Heart, Share2, ShoppingCart, Star } from "lucide-react";
+// Import thêm icon và component cần thiết
+import {
+  ChevronLeft,
+  Heart,
+  Share2,
+  ShoppingCart,
+  Star,
+  Check, // Icon để chỉ đã thêm thành công
+} from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { Product, ProductReview } from "../dtos/response/product-response.dto";
 
+// Import hooks và service
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { cartService } from "@/features/carts/services/cartService";
+import { Spinner } from "@/components/ui/spinner"; // Thêm Spinner
+
 interface ProductDetailProps {
   product: Product;
   reviews: ProductReview[];
+  isAlreadyInCart: boolean; // <-- Nhận prop mới
 }
 
-export function ProductDetail({ product, reviews }: ProductDetailProps) {
+export function ProductDetail({ product, reviews, isAlreadyInCart }: ProductDetailProps) {
+  const router = useRouter(); // Hook để điều hướng
+  
+  // State để quản lý trạng thái của nút
+  // *** THAY ĐỔI: Khởi tạo state bằng prop nhận được từ server ***
+  const [isAdded, setIsAdded] = useState(isAlreadyInCart);
+  const [isLoading, setIsLoading] = useState(false);
+
   const image =
     product.image ||
     `https://covers.openlibrary.org/b/isbn/${product.isbn}-L.jpg`;
 
-  const handleAddToCart = () => {
-    toast.success(`Added ${product.title} to cart!`);
+  // Cập nhật hàm handleAddToCart
+  const handleAddToCart = async () => {
+    setIsLoading(true);
+    try {
+      const response = await cartService.addItemToCart({
+        productId: product.id,
+      });
+
+      if (response.success) {
+        toast.success(`Đã thêm ${product.title} vào giỏ!`);
+        setIsAdded(true); // Thay đổi trạng thái nút
+      } else {
+        // Xử lý lỗi cụ thể
+        if (response.statusCode === 401) {
+          toast.error("Bạn cần đăng nhập để thêm vào giỏ hàng.");
+          router.push("/login"); // Chuyển hướng đến trang đăng nhập
+        } else {
+          toast.error(response.message || "Không thể thêm vào giỏ hàng.");
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Đã xảy ra lỗi, vui lòng thử lại.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleShare = () => {
@@ -96,6 +141,7 @@ export function ProductDetail({ product, reviews }: ProductDetailProps) {
                 className="w-full h-full object-cover"
                 preload
                 fill
+                unoptimized={true} // Thêm unoptimized
               />
             </div>
           </div>
@@ -111,8 +157,7 @@ export function ProductDetail({ product, reviews }: ProductDetailProps) {
           <h1 className="mb-2 text-2xl font-bold">{product.title}</h1>
           {product.authors.length > 0 && (
             <p className="text-muted-foreground mb-4">
-              by{" "}
-              {product.authors.map((author) => author.name).join(", ")}
+              by {product.authors.map((author) => author.name).join(", ")}
             </p>
           )}
 
@@ -149,12 +194,37 @@ export function ProductDetail({ product, reviews }: ProductDetailProps) {
 
           <Separator className="mb-6" />
 
-          {/* Action Buttons */}
+          {/* === CẬP NHẬT NÚT BẤM === */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <Button onClick={handleAddToCart} className="flex-1" size="lg">
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              Add to Cart
-            </Button>
+            {isAdded ? (
+              // Trạng thái 2: Đã thêm (View Cart)
+              <Button
+                onClick={() => router.push("/cart")}
+                className="flex-1"
+                size="lg"
+                variant="outline" // Đổi thành outline
+              >
+                <Check className="h-5 w-5 mr-2" />
+                View Cart
+              </Button>
+            ) : (
+              // Trạng thái 1: Thêm vào giỏ (Add to Cart)
+              <Button
+                onClick={handleAddToCart}
+                className="flex-1"
+                size="lg"
+                disabled={isLoading} // Vô hiệu hóa khi đang tải
+              >
+                {isLoading ? (
+                  <Spinner className="mr-2" />
+                ) : (
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                )}
+                {isLoading ? "Adding..." : "Add to Cart"}
+              </Button>
+            )}
+
+            {/* Các nút còn lại giữ nguyên */}
             <Button variant="outline" size="lg">
               <Heart className="h-5 w-5" />
             </Button>
@@ -162,6 +232,8 @@ export function ProductDetail({ product, reviews }: ProductDetailProps) {
               <Share2 className="h-5 w-5" />
             </Button>
           </div>
+          {/* === KẾT THÚC CẬP NHẬT NÚT BẤM === */}
+
 
           {/* Categories */}
           {product.categories.length > 0 && (
