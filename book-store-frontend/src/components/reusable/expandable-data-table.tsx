@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -22,31 +21,40 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel, 
   useReactTable,
+  Row, 
 } from "@tanstack/react-table";
 import { Spinner } from "../ui/spinner";
+import React from "react"; 
 
-interface DataTableProps<TData, TValue> {
+interface ExpandableDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   currentPage: number;
   pageCount: number;
   setCurrentPage: (page: number) => void;
   isLoading?: boolean;
+  renderSubComponent?: (props: { row: Row<TData> }) => React.ReactElement;
+  getRowCanExpand?: (row: Row<TData>) => boolean;
 }
 
-export function DataTable<TData, TValue>({
+export function ExpandableDataTable<TData, TValue>({
   columns,
   data,
   currentPage,
   pageCount,
   setCurrentPage,
   isLoading = false,
-}: DataTableProps<TData, TValue>) {
+  renderSubComponent, 
+  getRowCanExpand, 
+}: ExpandableDataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getRowCanExpand,
+    getExpandedRowModel: getExpandedRowModel(),
   });
 
   return (
@@ -74,19 +82,27 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <React.Fragment key={row.id}>
+                  <TableRow
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {row.getIsExpanded() && renderSubComponent && (
+                    <TableRow>
+                      <TableCell colSpan={columns.length}>
+                        {renderSubComponent({ row })}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))
             ) : (
               <TableRow>
@@ -107,6 +123,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
+
       <Pagination className="mt-6">
         <PaginationContent>
           <PaginationItem>

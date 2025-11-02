@@ -4,15 +4,32 @@ import { ColumnDef } from "@tanstack/react-table";
 import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye } from "lucide-react";
+import { ChevronDown } from "lucide-react"; 
 import { format } from "date-fns";
-
+import { cn } from "@/lib/utils"; 
 export const cartColumns: ColumnDef<CartResponse>[] = [
   {
     accessorKey: "id",
     header: "Cart ID",
     cell: ({ row }) => (
-      <div className="text-gray-500">#{row.original.id}</div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={row.getToggleExpandedHandler()} 
+        >
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 transition-transform",
+              row.getIsExpanded() && "rotate-180"
+            )}
+          />
+        </Button>
+        <span className="text-gray-500">
+          #{row.original.id.substring(0, 8)}...
+        </span>
+      </div>
     ),
   },
   {
@@ -33,36 +50,14 @@ export const cartColumns: ColumnDef<CartResponse>[] = [
     accessorKey: "total",
     header: "Total Value",
     cell: ({ row }) => (
-      <div>${row.original.total}</div>
+      <div>${(Number(row.original.total) || 0).toFixed(2)}</div>
     ),
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
     cell: ({ row }) => (
-      <div>
-        {format(new Date(row.original.createdAt), 'MM/dd/yyyy')}
-      </div>
+      <div>{format(new Date(row.original.createdAt), "MM/dd/yyyy")}</div>
     ),
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => {
-      const cart = row.original;
-      
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            // Handle view details action
-            console.log("View details for cart:", cart);
-          }}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      );
-    },
   },
 ];

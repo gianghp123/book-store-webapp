@@ -110,7 +110,7 @@ export class CartService {
 
   async getCarts(): Promise<CartResponseDto[]> {
     const cart = await this.cartRepository.find({
-      relations: ['items', 'items.product', 'user'],
+      relations: ['items', 'items.product', 'user','items.product.book','items.product.book.categories','items.product.book.authors'],
     });
 
     return CartResponseDto.fromEntities(cart);

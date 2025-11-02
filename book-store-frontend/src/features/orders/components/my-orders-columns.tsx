@@ -2,13 +2,13 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Order } from "@/features/orders/dtos/response/order-response.dto";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button"; 
 import { ChevronDown } from "lucide-react"; 
-import { cn } from "@/lib/utils"; 
+import { cn } from "@/lib/utils";
 
-export const orderColumns: ColumnDef<Order>[] = [
+export const myOrderColumns: ColumnDef<Order>[] = [
   {
     accessorKey: "id",
     header: "Order ID",
@@ -17,13 +17,13 @@ export const orderColumns: ColumnDef<Order>[] = [
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6"
+          className="h-6 w-6" 
           onClick={row.getToggleExpandedHandler()} 
         >
           <ChevronDown
             className={cn(
               "h-4 w-4 transition-transform",
-              row.getIsExpanded() && "rotate-180"
+              row.getIsExpanded() && "rotate-180" 
             )}
           />
         </Button>
@@ -31,13 +31,6 @@ export const orderColumns: ColumnDef<Order>[] = [
           #{row.original.id.substring(0, 8)}...
         </span>
       </div>
-    ),
-  },
-  {
-    accessorKey: "user",
-    header: "User",
-    cell: ({ row }) => (
-      <div>{row.original.user.email || row.original.user.phoneNumber}</div>
     ),
   },
   {
