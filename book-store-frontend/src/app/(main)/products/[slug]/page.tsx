@@ -1,4 +1,3 @@
-// src/app/(main)/products/[slug]/page.tsx
 import { getCartAction } from "@/features/carts/actions/cart.actions"; // Import cart action
 import { ProductDetail } from "@/features/products/components/ProductDetail";
 import {
@@ -53,39 +52,32 @@ export default async function ProductDetailPage({
   const { slug } = await params;
   let isAlreadyInCart = false;
 
-  // 1. Fetch sản phẩm
   const { data: productData } = await dataProvider(false).getOne<Product>({
     resource: "products",
     id: slug,
   });
 
-  // 2. Fetch giỏ hàng của user (nếu đã đăng nhập)
   try {
-    // Gọi service getCart (API /cart/me)
     const cartResponse = await getCartAction();
 
     if (cartResponse.success && cartResponse.data?.items) {
-      // 3. Kiểm tra xem product slug có nằm trong danh sách items của giỏ hàng không
-      // (Dùng productId vì DTO giỏ hàng đã được làm phẳng)
       isAlreadyInCart = cartResponse.data.items.some(
         (item) => item.product.id === slug
       );
     }
-    // Nếu lỗi (vd: 401 chưa đăng nhập), isAlreadyInCart sẽ giữ nguyên là false
   } catch (error) {
     console.warn(
       "Could not fetch cart status (user might not be logged in).",
       error
     );
-    isAlreadyInCart = false; // Đảm bảo an toàn
+    isAlreadyInCart = false;
   }
 
-  // 4. Truyền trạng thái (isAlreadyInCart) xuống Client Component
   return (
     <ProductDetail
       product={productData}
       reviews={productData.reviews || mockReviews || []}
-      isAlreadyInCart={isAlreadyInCart} // <-- Prop mới
+      isAlreadyInCart={isAlreadyInCart}
     />
   );
 }

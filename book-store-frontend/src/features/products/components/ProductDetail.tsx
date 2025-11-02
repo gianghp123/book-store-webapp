@@ -65,7 +65,6 @@ export function ProductDetail({ product, reviews, isAlreadyInCart }: ProductDeta
         // Xử lý lỗi cụ thể
         if (response.statusCode === 401) {
           toast.error("Bạn cần đăng nhập để thêm vào giỏ hàng.");
-          router.push("/login"); // Chuyển hướng đến trang đăng nhập
         } else {
           toast.error(response.message || "Không thể thêm vào giỏ hàng.");
         }

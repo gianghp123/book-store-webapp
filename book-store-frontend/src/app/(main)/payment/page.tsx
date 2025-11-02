@@ -2,6 +2,8 @@ import { PaymentForm1 } from "@/features/orders/components/PaymentForm";
 import { getCartAction } from "@/features/carts/actions/cart.actions";
 import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
 
+export const dynamic = "force-dynamic";
+
 export default async function PaymentPage() {
   let cartData: CartResponse | undefined = undefined;
   const response = await getCartAction();

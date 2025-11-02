@@ -31,7 +31,7 @@ interface Props {
 }
 
 const ShoppingCart1Page = ({ cartResponse }: Props) => {
-  const { refresh: refreshCartItemsCount } = useCartItemsCount();
+  const { refresh: refreshCartItemsCount, cartItemsCount: totalItems, loading } = useCartItemsCount();
   const [items, setItems] = useState(cartResponse?.items || []);
   const [current, setCurrent] = useState(1);
   const itemsPerPage = 3;
@@ -40,7 +40,6 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
     useState<CartItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const totalItems = items.length;
   const pageCount = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (current - 1) * itemsPerPage;
   const endIndex = current * itemsPerPage;
@@ -101,10 +100,14 @@ const ShoppingCart1Page = ({ cartResponse }: Props) => {
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <div className="space-y-4 min-h-[416px]">
-              {totalItems === 0 ? (
+              {totalItems === 0 || loading ? (
                 <Card>
                   <CardContent className="p-10 text-center text-muted-foreground">
-                    Your shopping cart is empty.
+                    {loading ? (
+                      <Spinner />
+                    ) : (
+                      "Your shopping cart is empty."
+                    )}
                   </CardContent>
                 </Card>
               ) : (

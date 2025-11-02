@@ -30,7 +30,7 @@ type UpdateParams<TVariables = Record<string, any>> = {
 type GetListParams = {
   resource: string;
   pagination?: {
-    current?: number;
+    currentPage?: number;
     pageSize?: number;
     mode?: "server" | "client" | "off";
   };
@@ -121,12 +121,12 @@ export async function getListAction({
   filters,
   withCredentials,
 }: GetListParams) {
-  const { current = 1, pageSize = 10 } = pagination ?? {};
+  const { currentPage = 1, pageSize = 10 } = pagination ?? {};
   const sort = sorters?.[0];
 
   const response = await apiFetch(`/${resource}`, {
     query: {
-      page: current,
+      page: currentPage,
       limit: pageSize,
       sortBy: sort?.field,
       sortOrder: sort?.order,
