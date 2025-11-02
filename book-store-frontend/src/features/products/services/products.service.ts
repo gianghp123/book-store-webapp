@@ -18,6 +18,7 @@ export const productService = {
         page: params.page || 1,
         limit: params.limit || 16,
       },
+      next: { revalidate: 60 },
     });
   },
 };

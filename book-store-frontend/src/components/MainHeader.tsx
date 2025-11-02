@@ -2,20 +2,18 @@
 
 import { useCartItemsCount } from "@/features/carts/context/CartItemsCountContext";
 import { useIsAuthenticated } from "@refinedev/core";
-import { Menu, Search, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation"; // Next.js 13+
 import { SearchBar } from "../features/search-bar/components/SearchBar";
 import AvatarPopover from "./AvatarPopover";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-interface HeaderProps {
-  onMenuToggle?: () => void;
-}
+import { Skeleton } from "./ui/skeleton";
 
-export function MainHeader({ onMenuToggle }: HeaderProps) {
+export function MainHeader() {
   const pathname = usePathname();
-  const { data: authenticated } = useIsAuthenticated();
+  const { data: authenticated, isLoading } = useIsAuthenticated();
   const { cartItemsCount } = useCartItemsCount();
 
   const isActive = (href: string) => pathname === href;
@@ -25,14 +23,6 @@ export function MainHeader({ onMenuToggle }: HeaderProps) {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="md:hidden"
-            onClick={onMenuToggle}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
               <span className="text-primary-foreground font-bold">B</span>
@@ -67,10 +57,12 @@ export function MainHeader({ onMenuToggle }: HeaderProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="sm:hidden">
-            <Search className="h-5 w-5" />
-          </Button>
-          {authenticated?.authenticated ? (
+          {isLoading ? (
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-5 w-5 rounded-full" />
+            </div>
+          ) : authenticated?.authenticated ? (
             <>
               <Link href="/cart" className="cursor-pointer">
                 <Button variant="ghost" size="sm" className="relative">

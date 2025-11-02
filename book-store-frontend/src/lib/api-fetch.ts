@@ -83,6 +83,7 @@ export async function apiFetch<T = any>(
     }
 
     const response = await fetch(fullUrl, { ...fetchOptions, headers });
+    console.log("Cache status:", response.headers.get("x-cache"));
     if (!response.ok) {
       let message = "Unknown error";
       try {

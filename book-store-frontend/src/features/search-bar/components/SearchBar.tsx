@@ -18,26 +18,75 @@ import { motion } from "framer-motion";
 import { Search, Sparkles } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
-import { useSearchContext } from "../providers/SearchContextProvider";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export function SearchBar() {
-  const {
-    searchType,
-    setSearchType,
-    setSearchQuery,
-    searchInput,
-    setSearchInput,
-  } = useSearchContext();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [searchType, setSearchType] = useState<SearchType>(
+    (searchParams.get("searchType") as SearchType) || SearchType.NORMAL
+  );
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("query") || ""
+  );
 
   const isSmart = searchType === SearchType.SMART;
 
-  const router = useRouter();
+  // Sync local state with URL changes
+  useEffect(() => {
+    const urlSearchType = searchParams.get("searchType") as SearchType;
+    const urlQuery = searchParams.get("query");
+    
+    if (urlSearchType && urlSearchType !== searchType) {
+      setSearchType(urlSearchType);
+    }
+    if (urlQuery !== null && urlQuery !== searchInput) {
+      setSearchInput(urlQuery);
+    }
+  }, [searchParams]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchQuery(searchInput);
-    router.push("/");
+
+    const params = new URLSearchParams(searchParams.toString());
+    
+    // Set search parameters
+    params.set("query", searchInput);
+    params.set("searchType", searchType);
+    params.set("page", "1"); // Reset to page 1 on new search
+    
+    // Clear filters when doing smart search
+    if (searchType === SearchType.SMART) {
+      params.delete("categoryIds");
+      params.delete("minPrice");
+      params.delete("maxPrice");
+    }
+
+    if (params.toString() === searchParams.toString()) return;
+    
+    router.push(`/?${params.toString()}`);
+  };
+
+  const handleSearchTypeChange = (value: SearchType) => {
+    setSearchType(value);
+    
+    // If there's an active search, update URL immediately
+    if (searchInput.trim()) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("searchType", value);
+      params.set("page", "1");
+      
+      // Clear filters when switching to smart search
+      if (value === SearchType.SMART) {
+        params.delete("categoryIds");
+        params.delete("minPrice");
+        params.delete("maxPrice");
+      }
+      
+      router.push(`/?${params.toString()}`);
+    }
   };
 
   return (
@@ -51,14 +100,7 @@ export function SearchBar() {
         animate={{ scale: isSmart ? 1.02 : 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 15 }}
       >
-        <Select
-          value={searchType}
-          onValueChange={(value) => setSearchType(value as SearchType)}
-        >
-          {/* 
-            NOTE: The `open` prop is removed from <Tooltip> so it behaves normally (on hover).
-            You can add it back for debugging if needed.
-          */}
+        <Select value={searchType} onValueChange={handleSearchTypeChange}>
           <Tooltip>
             <TooltipTrigger asChild>
               <SelectTrigger
@@ -81,7 +123,6 @@ export function SearchBar() {
                   : "bg-white text-foreground border-border [&>span>svg.z-50]:invisible"
               }`}
             >
-              {/* Tooltip text + icon */}
               {isSmart ? (
                 <>
                   <Sparkles className="h-4 w-4 text-yellow-300 animate-pulse" />
@@ -109,7 +150,7 @@ export function SearchBar() {
           </SelectContent>
         </Select>
 
-        <div className="hidden sm:flex relative max-w-sm flex-1">
+        <form onSubmit={handleSubmit} className="hidden sm:flex relative max-w-sm flex-1">
           <Search
             className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
               isSmart ? "text-purple-500" : "text-muted-foreground"
@@ -127,7 +168,7 @@ export function SearchBar() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
-        </div>
+        </form>
 
         <Button
           onClick={handleSubmit}

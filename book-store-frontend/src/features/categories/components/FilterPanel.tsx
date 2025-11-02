@@ -1,6 +1,6 @@
 // src/features/categories/components/FilterPanel.tsx
 "use client";
-// Import thêm icon Search từ lucide-react
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,9 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronDown, Filter, Search, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProductCategory } from "../dtos/response/category.dto";
-
 import { ProductFilterQueryDto } from "@/features/products/dtos/request/product.dto";
 
 interface FilterPanelProps {
@@ -51,6 +50,13 @@ export function FilterPanel({
     filters.maxPrice
   );
 
+  // Sync local state with filters prop when it changes (e.g., from URL)
+  useEffect(() => {
+    setCategoryIds(filters.categoryIds || []);
+    setMinPrice(filters.minPrice);
+    setMaxPrice(filters.maxPrice);
+  }, [filters]);
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -64,48 +70,68 @@ export function FilterPanel({
       : categoryIds.filter((id) => id !== categoryId);
 
     setCategoryIds(newCategories);
+    // Update parent component's local state
+    onFiltersChange({
+      ...filters,
+      categoryIds: newCategories,
+    });
   };
 
   const handleMinPriceChange = (value: string) => {
-    setMinPrice(value === "" ? undefined : parseFloat(value));
+    const newMinPrice = value === "" ? undefined : parseFloat(value);
+    setMinPrice(newMinPrice);
+    // Update parent component's local state
+    onFiltersChange({
+      ...filters,
+      minPrice: newMinPrice,
+    });
   };
 
   const handleMaxPriceChange = (value: string) => {
-    setMaxPrice(value === "" ? undefined : parseFloat(value));
-  };
-  const filterCount =
-    (categoryIds.length || 0) +
-    (minPrice && minPrice > 0 ? 1 : 0) +
-    (filters.maxPrice && filters.maxPrice < 1000 ? 1 : 0);
-
-  const handleApplyFilters = () => {
+    const newMaxPrice = value === "" ? undefined : parseFloat(value);
+    setMaxPrice(newMaxPrice);
+    // Update parent component's local state
     onFiltersChange({
       ...filters,
-      categoryIds,
-      minPrice,
-      maxPrice,
+      maxPrice: newMaxPrice,
     });
+  };
+
+  // Calculate filter count based on local state
+  const filterCount =
+    categoryIds.length +
+    (minPrice !== undefined && minPrice > 0 ? 1 : 0) +
+    (maxPrice !== undefined && maxPrice < Infinity ? 1 : 0);
+
+  const handleApplyFilters = () => {
     onApplyFilters();
+    if (isMobile && onClose) {
+      onClose();
+    }
   };
 
   const handleClearFilters = () => {
-    onClearFilters();
     setCategoryIds([]);
     setMinPrice(undefined);
     setMaxPrice(undefined);
+    onClearFilters();
+    if (isMobile && onClose) {
+      onClose();
+    }
   };
 
   return (
     <Card className={`h-fit sticky top-20 ${isMobile ? "w-full" : "w-80"}`}>
       <CardHeader className="pb-3">
-        {/* Header giữ nguyên */}
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             Filters
-            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-              {filterCount}
-            </span>
+            {filterCount > 0 && (
+              <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
+                {filterCount}
+              </span>
+            )}
           </CardTitle>
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={handleClearFilters}>
@@ -126,10 +152,9 @@ export function FilterPanel({
           open={openSections.categories}
           onOpenChange={() => toggleSection("categories")}
         >
-          {/* ... Nội dung Categories giữ nguyên ... */}
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between h-auto">
-              <span>Categories</span>
+              <span className="font-semibold">Categories</span>
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${
                   openSections.categories ? "rotate-180" : ""
@@ -159,7 +184,7 @@ export function FilterPanel({
                         />
                         <label
                           htmlFor={`cat-${category.id}`}
-                          className="text-sm cursor-pointer"
+                          className="text-sm cursor-pointer hover:text-primary transition-colors"
                         >
                           {category.name}
                         </label>
@@ -186,7 +211,7 @@ export function FilterPanel({
         >
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="w-full justify-between h-auto">
-              <span>Price Range</span>
+              <span className="font-semibold">Price Range</span>
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${
                   openSections.price ? "rotate-180" : ""
@@ -211,7 +236,8 @@ export function FilterPanel({
                     id="minPrice"
                     type="number"
                     min="0"
-                    value={filters.minPrice ?? ""}
+                    placeholder="0"
+                    value={minPrice ?? ""}
                     onChange={(e) => handleMinPriceChange(e.target.value)}
                     className="pl-6"
                   />
@@ -232,7 +258,8 @@ export function FilterPanel({
                     id="maxPrice"
                     type="number"
                     min="0"
-                    value={filters.maxPrice ?? ""}
+                    placeholder="999"
+                    value={maxPrice ?? ""}
                     onChange={(e) => handleMaxPriceChange(e.target.value)}
                     className="pl-6"
                   />
@@ -249,8 +276,6 @@ export function FilterPanel({
             </Button>
           </CollapsibleContent>
         </Collapsible>
-
-        {/* Rating Section */}
       </CardContent>
     </Card>
   );

@@ -15,7 +15,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { FilterPanel } from "@/features/categories/components/FilterPanel";
 import { ProductCategory } from "@/features/categories/dtos/response/category.dto";
 import { ProductFilterQueryDto } from "@/features/products/dtos/request/product.dto";
-import { Grid, List } from "lucide-react";
+import { Grid } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -23,12 +23,16 @@ import { useProducts } from "../hooks/useProducts";
 import { ProductCard } from "./ProductCard";
 import { SortDropdown, SortOption } from "./SortDropDown";
 import { SortOrder } from "@/lib/constants/enums";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function ProductCatalogue({
   categories,
 }: {
   categories: ProductCategory[];
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
@@ -44,51 +48,62 @@ export function ProductCatalogue({
     name: { field: "title", order: SortOrder.ASC },
   };
 
-  const {
-    products,
-    total,
-    loading,
-    error,
-    totalPages,
-    refetch,
-    filters,
-    setFilters,
-    setCurrentPage,
-    currentPage,
-  } = useProducts();
+  const { products, total, loading, error, totalPages, currentPage } =
+    useProducts();
 
-  const [shouldSmoothScroll, setShouldSmoothScroll] = useState(false);
-  const isFirstLoadRef = useRef(true);
+  // Parse current filters from URL
+  const getCurrentFilters = (): ProductFilterQueryDto => ({
+    page: Number(searchParams.get("page")) || 1,
+    limit: Number(searchParams.get("limit")) || 16,
+    sortBy: searchParams.get("sortBy") || "id",
+    sortOrder: (searchParams.get("sortOrder") as SortOrder) || SortOrder.DESC,
+    query: searchParams.get("query") || "",
+    categoryIds: searchParams.get("categoryIds")?.split(",").filter(Boolean) || [],
+    minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+    maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+    searchType: searchParams.get("searchType") as any,
+  });
 
+  const [filters, setFilters] = useState<ProductFilterQueryDto>(getCurrentFilters());
+
+  // Sync local filters state with URL on mount and URL changes
   useEffect(() => {
-    if ("scrollRestoration" in history) {
-      history.scrollRestoration = "manual";
-    }
-    if (isFirstLoadRef.current) {
-      isFirstLoadRef.current = false;
-      return;
-    }
+    setFilters(getCurrentFilters());
+  }, [searchParams]);
 
-    if (!shouldSmoothScroll) {
+  // Update URL with new filters
+  const updateURL = (newFilters: Partial<ProductFilterQueryDto>) => {
+    const params = new URLSearchParams();
+    const merged = { ...filters, ...newFilters };
+
+    Object.entries(merged).forEach(([key, value]) => {
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        (Array.isArray(value) ? value.length > 0 : true)
+      ) {
+        params.set(key, value.toString());
+      }
+    });
+    if (params.toString() === searchParams.toString()) {
       return;
     }
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-    setShouldSmoothScroll(false);
-  }, [filters.page, shouldSmoothScroll]);
+    router.push(`/?${params.toString()}`);
+  };
 
   const handlePageChange = (page: number) => {
-    setShouldSmoothScroll(true);
-    setCurrentPage(page);
+    updateURL({ page });
   };
 
   const handleFilterChange = (newFilters: ProductFilterQueryDto) => {
-    setFilters(newFilters);
+    // Just update local state, don't update URL yet
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   const handleClearFilters = () => {
-    setFilters({
+    // Clear filters and update URL immediately
+    updateURL({
       page: 1,
       categoryIds: [],
       minPrice: undefined,
@@ -97,13 +112,18 @@ export function ProductCatalogue({
   };
 
   const handleApplyFilters = () => {
-    console.log(filters);
-    refetch(1);
+    // Apply filters to URL (this triggers fetch via useProducts)
+    updateURL({ ...filters, page: 1 });
   };
 
   const handleSortChange = (value: SortOption) => {
     setSortBy(value);
-    setCurrentPage(1);
+    const { field, order } = sortMapping[value];
+    updateURL({
+      page: 1,
+      sortBy: field,
+      sortOrder: order,
+    });
   };
 
   const getPageNumbers = () => {

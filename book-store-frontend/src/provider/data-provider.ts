@@ -8,9 +8,9 @@ import {
 } from "@/lib/provider-actions/data-provider.actions";
 import { DataProvider } from "@refinedev/core";
 
-export const dataProvider = (withCredentials: boolean): DataProvider => ({
+export const dataProvider = (withCredentials=true): DataProvider => ({
   getOne: async ({ id, resource, meta }) => {
-    return await getOneAction({ id, resource, meta });
+    return await getOneAction({ id, resource, meta, withCredentials });
   },
 
   create: async ({ resource, variables, meta }) => {
@@ -19,6 +19,7 @@ export const dataProvider = (withCredentials: boolean): DataProvider => ({
       resource,
       variables: variables as Record<string, any>,
       meta,
+      withCredentials,
     });
   },
 
@@ -29,11 +30,12 @@ export const dataProvider = (withCredentials: boolean): DataProvider => ({
       resource,
       variables: variables as Record<string, any>,
       meta,
+      withCredentials,
     });
   },
 
   deleteOne: async ({ id, resource, meta }) => {
-    return await deleteOneAction({ id, resource, meta });
+    return await deleteOneAction({ id, resource, meta, withCredentials });
   },
 
   getList: async ({ resource, pagination, sorters, filters, meta }) => {
@@ -43,6 +45,7 @@ export const dataProvider = (withCredentials: boolean): DataProvider => ({
       sorters,
       filters,
       meta,
+      withCredentials,
     });
   },
 

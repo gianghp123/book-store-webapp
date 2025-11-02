@@ -20,7 +20,7 @@ import { Bell, Book, CreditCard, Globe, Lock } from "lucide-react";
 export default function SettingsPage() {
   return (
     <Authenticated key="settings">
-      <div className="w-full max-w-6xl mx-auto p-6">
+      <div className="w-full max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Settings</h1>

@@ -9,12 +9,14 @@ type GetOneParams = {
   id: string | number;
   resource: string;
   meta?: Record<string, any>;
+  withCredentials?: boolean;
 };
 
 type CreateParams<TVariables = Record<string, any>> = {
   resource: string;
   variables: TVariables; // ✅ Generic type
   meta?: Record<string, any>;
+  withCredentials?: boolean;
 };
 
 type UpdateParams<TVariables = Record<string, any>> = {
@@ -22,12 +24,7 @@ type UpdateParams<TVariables = Record<string, any>> = {
   resource: string;
   variables: TVariables; // ✅ Generic type
   meta?: Record<string, any>;
-};
-
-type DeleteOneParams = {
-  id: string | number;
-  resource: string;
-  meta?: Record<string, any>;
+  withCredentials?: boolean;
 };
 
 type GetListParams = {
@@ -43,12 +40,17 @@ type GetListParams = {
   }>;
   filters?: CrudFilter[];
   meta?: Record<string, any>;
+  withCredentials?: boolean;
 };
 
 // ✅ Server Actions with generic parameters
-export async function getOneAction({ id, resource }: GetOneParams) {
+export async function getOneAction({
+  id,
+  resource,
+  withCredentials,
+}: GetOneParams) {
   const { data } = await apiFetch(`/${resource}/${id}`, {
-    withCredentials: true,
+    withCredentials,
   });
   return { data };
 }
@@ -56,11 +58,12 @@ export async function getOneAction({ id, resource }: GetOneParams) {
 export async function createAction<TVariables = Record<string, any>>({
   resource,
   variables,
+  withCredentials,
 }: CreateParams<TVariables>) {
   const { data, success, message } = await apiFetch(`/${resource}`, {
     method: "POST",
     body: JSON.stringify(variables),
-    withCredentials: true,
+    withCredentials,
   });
 
   if (!success) {
@@ -74,11 +77,12 @@ export async function updateAction<TVariables = Record<string, any>>({
   id,
   resource,
   variables,
+  withCredentials,
 }: UpdateParams<TVariables>) {
   const { data, success, message } = await apiFetch(`/${resource}/${id}`, {
     method: "PATCH",
     body: JSON.stringify(variables),
-    withCredentials: true,
+    withCredentials,
   });
 
   if (!success) {
@@ -91,14 +95,16 @@ export async function updateAction<TVariables = Record<string, any>>({
 export async function deleteOneAction<TData = any>({
   id,
   resource,
+  withCredentials,
 }: {
   id: string | number;
   resource: string;
   meta?: any;
+  withCredentials?: boolean;
 }): Promise<{ data: TData }> {
   const { success, message, data } = await apiFetch(`/${resource}/${id}`, {
     method: "DELETE",
-    withCredentials: true,
+    withCredentials,
   });
 
   if (!success) {
@@ -113,6 +119,7 @@ export async function getListAction({
   pagination,
   sorters,
   filters,
+  withCredentials,
 }: GetListParams) {
   const { current = 1, pageSize = 10 } = pagination ?? {};
   const sort = sorters?.[0];
@@ -125,7 +132,7 @@ export async function getListAction({
       sortOrder: sort?.order,
       ...(filters && { filters: JSON.stringify(filters) }),
     },
-    withCredentials: true,
+    withCredentials,
   });
 
   if (!response.success) {
