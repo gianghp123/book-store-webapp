@@ -149,9 +149,6 @@ export class OrderService {
       take: limit,
     });
 
-    if (orders.length === 0) {
-      throw new NotFoundException('User has no orders');
-    }
 
     const orderResponseDtos = OrderResponseDto.fromEntities(orders);
 

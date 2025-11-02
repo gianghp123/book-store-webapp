@@ -8,7 +8,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Role } from "@/lib/constants/enums";
 import { useGetIdentity } from "@refinedev/core";
-import { ChartCandlestick, Settings, User } from "lucide-react";
+import { ChartCandlestick, Settings, User, ShoppingBag } from "lucide-react"; 
 import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 
@@ -42,6 +42,13 @@ const AvatarPopover = () => {
             <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent">
               <User className="h-4 w-4" />
               Profile
+            </button>
+          </Link>
+
+          <Link href="/my-orders">
+            <button className="flex w-full items-center gap-2 rounded-md p-2 hover:bg-accent">
+              <ShoppingBag className="h-4 w-4" />
+              Order management
             </button>
           </Link>
 
