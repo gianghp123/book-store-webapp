@@ -202,7 +202,7 @@ export class OrderService {
     const offset = (page - 1) * limit;
 
     const [orders, total] = await this.orderRepository.findAndCount({
-      relations: ['items', 'items.product', 'user'],
+      relations: ['items', 'items.product', 'user','items.product.book','items.product.book.categories','items.product.book.authors'],
       order: { orderDate: 'DESC' },
       skip: offset,
       take: limit,

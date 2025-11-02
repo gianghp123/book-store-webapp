@@ -1,18 +1,38 @@
+// Tệp cập nhật: src/features/admin/components/order-management/columns.tsx
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Order } from "@/features/orders/dtos/response/order-response.dto";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye } from "lucide-react";
 import { format } from "date-fns";
+import { ChevronDown } from "lucide-react"; // <-- THÊM IMPORT
+import { cn } from "@/lib/utils"; // <-- THÊM IMPORT
 
 export const orderColumns: ColumnDef<Order>[] = [
   {
     accessorKey: "id",
     header: "Order ID",
     cell: ({ row }) => (
-      <div className="text-gray-500">#{row.original.id}</div>
+      // *** THAY ĐỔI Ô NÀY ***
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={row.getToggleExpandedHandler()} // Gọi hàm toggle
+        >
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 transition-transform",
+              row.getIsExpanded() && "rotate-180" // Xoay mũi tên
+            )}
+          />
+        </Button>
+        <span className="text-gray-500">
+          #{row.original.id.substring(0, 8)}...
+        </span>
+      </div>
     ),
   },
   {
@@ -26,24 +46,18 @@ export const orderColumns: ColumnDef<Order>[] = [
     accessorKey: "orderDate",
     header: "Order Date",
     cell: ({ row }) => (
-      <div>
-        {format(new Date(row.original.orderDate), 'MM/dd/yyyy')}
-      </div>
+      <div>{format(new Date(row.original.orderDate), "MM/dd/yyyy")}</div>
     ),
   },
   {
     accessorKey: "items",
     header: "Items",
-    cell: ({ row }) => (
-      <div>{row.original.items.length} items</div>
-    ),
+    cell: ({ row }) => <div>{row.original.items.length} items</div>,
   },
   {
     accessorKey: "totalAmount",
     header: "Total Amount",
-    cell: ({ row }) => (
-      <div>${row.original.totalAmount}</div>
-    ),
+    cell: ({ row }) => <div>${Number(row.original.totalAmount).toFixed(2)}</div>,
   },
   {
     accessorKey: "status",
@@ -51,9 +65,10 @@ export const orderColumns: ColumnDef<Order>[] = [
     cell: ({ row }) => {
       const status = row.original.status;
       let badgeColor = "bg-gray-100 text-gray-700";
-      
+
       switch (status) {
         case "Completed":
+        case "Success": // Hỗ trợ cả "Success"
           badgeColor = "bg-green-100 text-green-700";
           break;
         case "Processing":
@@ -66,32 +81,9 @@ export const orderColumns: ColumnDef<Order>[] = [
           badgeColor = "bg-red-100 text-red-700";
           break;
       }
-      
-      return (
-        <Badge className={badgeColor}>
-          {status}
-        </Badge>
-      );
+
+      return <Badge className={badgeColor}>{status}</Badge>;
     },
   },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: ({ row }) => {
-      const order = row.original;
-      
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            // Handle view details action
-            console.log("View details for order:", order);
-          }}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      );
-    },
-  },
+  // *** XÓA BỎ CỘT "ACTIONS" CŨ (NÚT CON MẮT) ***
 ];

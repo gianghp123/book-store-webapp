@@ -1,6 +1,9 @@
 // Tệp cập nhật: src/features/orders/components/MyOrders.tsx
 "use client";
-import { DataTable } from "@/components/reusable/data-table";
+// *** THAY ĐỔI IMPORT ***
+import { ExpandableDataTable } from "@/components/reusable/expandable-data-table";
+// *** KẾT THÚC THAY ĐỔI ***
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Order } from "@/features/orders/dtos/response/order-response.dto";
 import { Authenticated, HttpError, useTable } from "@refinedev/core";
@@ -15,7 +18,7 @@ export function MyOrders() {
       pagination: {
         pageSize: 10,
       },
-      syncWithLocation: true,
+      
       meta: {
         relations: ["items", "items.product", "items.product.book"],
       },
@@ -26,9 +29,9 @@ export function MyOrders() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">My order</h1>
+            <h1 className="text-2xl font-bold">Đơn hàng của tôi</h1>
             <p className="text-gray-600 mt-1">
-              View the history of orders you have placed.
+              Xem lịch sử các đơn hàng bạn đã đặt.
             </p>
           </div>
         </div>
@@ -38,7 +41,8 @@ export function MyOrders() {
             <CardTitle>Lịch sử đơn hàng</CardTitle>
           </CardHeader>
           <CardContent>
-            <DataTable
+            {/* *** THAY ĐỔI TÊN COMPONENT *** */}
+            <ExpandableDataTable
               columns={myOrderColumns}
               data={result?.data}
               pageCount={pageCount}
@@ -48,6 +52,7 @@ export function MyOrders() {
               getRowCanExpand={() => true}
               renderSubComponent={({ row }) => <MyOrdersSubRow row={row} />}
             />
+            {/* *** KẾT THÚC THAY ĐỔI *** */}
           </CardContent>
         </Card>
       </div>

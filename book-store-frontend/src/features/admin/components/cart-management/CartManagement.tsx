@@ -1,22 +1,20 @@
 "use client";
-import { ImageWithFallback } from "@/components/ImageWithFallBack";
-import { DataTable } from "@/components/reusable/data-table";
+// *** THAY ĐỔI IMPORT DATATABLE ***
+import { ExpandableDataTable } from "@/components/reusable/expandable-data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+// *** XÓA IMPORT DIALOG ***
 import { Input } from "@/components/ui/input";
 import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
 import { HttpError, useTable } from "@refinedev/core";
-import { Search, ShoppingCart, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { DollarSign, Search, ShoppingCart, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+// *** THAY ĐỔI IMPORT COLUMNS ***
 import { cartColumns } from "./columns";
+// *** THÊM IMPORT SUBROW ***
+import { CartSubRow } from "./CartSubRow";
 
 export function CartManagement() {
   const {
@@ -31,22 +29,51 @@ export function CartManagement() {
     pagination: {
       pageSize: 10,
     },
+    meta: {
+      relations: [
+        "items",
+        "items.product",
+        "items.product.book",
+        "items.product.categories",
+        "items.product.authors",
+        "user",
+      ],
+    },
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCart, setSelectedCart] = useState<CartResponse | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleViewDetails = (cart: CartResponse) => {
-    setSelectedCart(cart);
-    setIsDialogOpen(true);
-  };
+  // *** XÓA BỎ STATE VÀ HÀM CỦA DIALOG ***
+  // const [selectedCart, setSelectedCart] = useState<CartResponse | null>(null);
+  // const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // const handleViewDetails = (cart: CartResponse) => { ... };
 
-  const handleRemoveFromCart = (cartId: string, itemId: string) => {
-    toast.success("Item removed from cart");
-  };
+  // *** SỬA LẠI KHAI BÁO COLUMNS ***
+  const columns = cartColumns;
+
+  const cartStats = useMemo(() => {
+    if (!result?.data) {
+      return { activeCarts: 0, totalItems: 0, totalValue: 0 };
+    }
+    const totalItems = result.data.reduce(
+      (acc, cart) => acc + cart.items.length,
+      0
+    );
+    const totalValue = result.data.reduce(
+      (acc, cart) => acc + (Number(cart.total) || 0),
+      0
+    );
+    return {
+      activeCarts: result.total,
+      totalItems,
+      totalValue,
+    };
+  }, [result?.data, result?.total]);
+
+  // (Hàm handleRemoveFromCart đã được chuyển vào CartSubRow)
 
   return (
     <div className="p-6 space-y-6">
+      {/* ... Phần Header và các Card Thống kê giữ nguyên ... */}
       <div className="flex items-center justify-between">
         <div>
           <h1>Cart Management</h1>
@@ -62,7 +89,7 @@ export function CartManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Carts</p>
-                <div className="text-2xl mt-1">{result.total}</div>
+                <div className="text-2xl mt-1">{cartStats.activeCarts}</div>
               </div>
               <ShoppingCart className="h-8 w-8 text-blue-600" />
             </div>
@@ -74,7 +101,7 @@ export function CartManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Items</p>
-                <div className="text-2xl mt-1">{result.total}</div>
+                <div className="text-2xl mt-1">{cartStats.totalItems}</div>
               </div>
               <ShoppingCart className="h-8 w-8 text-green-600" />
             </div>
@@ -86,9 +113,11 @@ export function CartManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Value</p>
-                <div className="text-2xl mt-1">${result.total}</div>
+                <div className="text-2xl mt-1">
+                  ${cartStats.totalValue.toFixed(2)}
+                </div>
               </div>
-              <ShoppingCart className="h-8 w-8 text-purple-600" />
+              <DollarSign className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
@@ -109,99 +138,22 @@ export function CartManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable
-            columns={cartColumns}
+          {/* *** THAY THẾ DATATABLE BẰNG EXPANDABLEDATATABLE *** */}
+          <ExpandableDataTable
+            columns={columns} // Dùng columns đã khai báo ở trên
             data={result.data}
             isLoading={tableQuery.isLoading}
             currentPage={currentPage}
             pageCount={pageCount}
             setCurrentPage={setCurrentPage}
+            // Thêm 2 props để kích hoạt tính năng mở rộng
+            getRowCanExpand={() => true}
+            renderSubComponent={({ row }) => <CartSubRow row={row} />}
           />
         </CardContent>
       </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Cart Details - #{selectedCart?.id}</DialogTitle>
-          </DialogHeader>
-          {selectedCart && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Created At</p>
-                  <p>{new Date(selectedCart.createdAt).toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Items</p>
-                  <p>{selectedCart.items.length}</p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-3">Cart Items</h3>
-                <div className="space-y-3">
-                  {selectedCart.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex gap-4 p-3 bg-gray-50 rounded-lg"
-                    >
-                      <ImageWithFallback
-                        src={`https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=200`}
-                        alt={item.product.title}
-                        className="w-16 h-20 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <p>{item.product.title}</p>
-                        {item.product.description && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            {item.product.description}
-                          </p>
-                        )}
-                        <div className="flex gap-2 mt-2">
-                          {item.product.categories && item.product.categories.map((cat) => (
-                            <Badge
-                              key={cat.id}
-                              variant="secondary"
-                              className="text-xs"
-                            >
-                              {cat.name}
-                            </Badge>
-                          ))}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          by{" "}
-                          {item.product.authors && item.product.authors.map((a) => a.name).join(", ")}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end justify-between">
-                        <p>${item.product.price || 0}</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleRemoveFromCart(selectedCart.id, item.id)
-                          }
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-4 border-t">
-                <div>
-                  <p className="text-sm text-gray-600">Total</p>
-                  <p className="text-xl">${selectedCart.total.toFixed(2)}</p>
-                </div>
-                <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* *** XÓA BỎ TOÀN BỘ COMPONENT <Dialog> CŨ *** */}
     </div>
   );
 }

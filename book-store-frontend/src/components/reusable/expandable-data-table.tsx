@@ -1,4 +1,4 @@
-// src/components/reusable/data-table.tsx
+// Tệp mới: src/components/reusable/expandable-data-table.tsx
 "use client";
 
 import {
@@ -22,31 +22,42 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel, // <-- Tính năng quan trọng
   useReactTable,
+  Row, // <-- Import Row
 } from "@tanstack/react-table";
 import { Spinner } from "../ui/spinner";
+import React from "react"; // <-- Import React
 
-interface DataTableProps<TData, TValue> {
+interface ExpandableDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   currentPage: number;
   pageCount: number;
   setCurrentPage: (page: number) => void;
   isLoading?: boolean;
+  // Props dành riêng cho việc mở rộng
+  renderSubComponent?: (props: { row: Row<TData> }) => React.ReactElement;
+  getRowCanExpand?: (row: Row<TData>) => boolean;
 }
 
-export function DataTable<TData, TValue>({
+export function ExpandableDataTable<TData, TValue>({
   columns,
   data,
   currentPage,
   pageCount,
   setCurrentPage,
   isLoading = false,
-}: DataTableProps<TData, TValue>) {
+  renderSubComponent, // Nhận prop
+  getRowCanExpand, // Nhận prop
+}: ExpandableDataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    // Kích hoạt tính năng mở rộng
+    getRowCanExpand,
+    getExpandedRowModel: getExpandedRowModel(),
   });
 
   return (
@@ -74,19 +85,30 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <React.Fragment key={row.id}>
+                  {/* Hàng chính */}
+                  <TableRow
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+
+                  {/* Hàng chi tiết (khi mở rộng) */}
+                  {row.getIsExpanded() && renderSubComponent && (
+                    <TableRow>
+                      <TableCell colSpan={columns.length}>
+                        {renderSubComponent({ row })}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))
             ) : (
               <TableRow>
@@ -107,6 +129,8 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
+      
+      {/* Pagination (giữ nguyên) */}
       <Pagination className="mt-6">
         <PaginationContent>
           <PaginationItem>
