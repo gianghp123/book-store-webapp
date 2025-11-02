@@ -1,0 +1,110 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres-book-store-prod
+    env_file: ./book-store-backend/.env.prod
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # qdrant:
+  #   image: qdrant/qdrant:latest
+  #   container_name: qdrant-book-store
+  #   restart: unless-stopped
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   ports:
+  #     - "${QDRANT_PORT}:6333"    # REST API
+  #     - "${QDRANT_GRPC_PORT}:6334"  # gRPC API
+  #   volumes:
+  #     - qdrant_data:/qdrant/storage:z 
+  #   env_file: book-store-backend/.env
+  #   healthcheck:
+  #     test:
+  #       - CMD-SHELL
+  #       - bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 3
+
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: redis-book-store
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${REDIS_PORT}:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
+
+  book-store-backend:
+    container_name: book-store-backend-prod
+    build:
+      context: ./book-store-backend
+    ports:
+      - "4000:4000"
+    env_file: ./book-store-backend/.env.prod
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      # qdrant:
+      #   condition: service_healthy
+      # redis:
+      #   condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # book-store-search-engine:
+  #   image: book-store-search-engine
+  #   container_name: book-store-search-engine
+  #   ports:
+  #     - "8081:8081"
+  #   env_file: book-store-search-engine/.env
+  #   environment:
+  #     - NODE_ENV=production
+  #   depends_on:
+  #     book-store-backend:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
+
+  book-store-frontend:
+    container_name: book-store-frontend-prod
+    build:
+      context: ./book-store-frontend
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:4000
+    ports:
+      - "3000:3000"
+    env_file: ./book-store-frontend/.env.prod
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      book-store-backend:
+        condition: service_healthy
+      # book-store-search-engine:
+      #   condition: service_healthy
+
+volumes:
+  pgdata:
+  # redis_data:
+  # qdrant_data:
