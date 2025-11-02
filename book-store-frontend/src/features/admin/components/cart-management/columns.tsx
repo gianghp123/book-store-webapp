@@ -4,28 +4,25 @@ import { ColumnDef } from "@tanstack/react-table";
 import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown } from "lucide-react"; // <-- THÊM IMPORT
+import { ChevronDown } from "lucide-react"; 
 import { format } from "date-fns";
-import { cn } from "@/lib/utils"; // <-- THÊM IMPORT
-
-// *** THAY ĐỔI: Chuyển từ hàm getCartColumns thành hằng số cartColumns ***
+import { cn } from "@/lib/utils"; 
 export const cartColumns: ColumnDef<CartResponse>[] = [
   {
     accessorKey: "id",
     header: "Cart ID",
     cell: ({ row }) => (
-      // *** THAY ĐỔI Ô NÀY ***
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
           className="h-6 w-6"
-          onClick={row.getToggleExpandedHandler()} // <-- Thêm handler
+          onClick={row.getToggleExpandedHandler()} 
         >
           <ChevronDown
             className={cn(
               "h-4 w-4 transition-transform",
-              row.getIsExpanded() && "rotate-180" // Xoay icon
+              row.getIsExpanded() && "rotate-180"
             )}
           />
         </Button>
@@ -63,5 +60,4 @@ export const cartColumns: ColumnDef<CartResponse>[] = [
       <div>{format(new Date(row.original.createdAt), "MM/dd/yyyy")}</div>
     ),
   },
-  // *** XÓA CỘT "ACTIONS" CŨ (NÚT CON MẮT) ***
 ];

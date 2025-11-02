@@ -1,4 +1,3 @@
-// Tệp mới: src/components/reusable/expandable-data-table.tsx
 "use client";
 
 import {
@@ -22,12 +21,12 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getExpandedRowModel, // <-- Tính năng quan trọng
+  getExpandedRowModel, 
   useReactTable,
-  Row, // <-- Import Row
+  Row, 
 } from "@tanstack/react-table";
 import { Spinner } from "../ui/spinner";
-import React from "react"; // <-- Import React
+import React from "react"; 
 
 interface ExpandableDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -36,7 +35,6 @@ interface ExpandableDataTableProps<TData, TValue> {
   pageCount: number;
   setCurrentPage: (page: number) => void;
   isLoading?: boolean;
-  // Props dành riêng cho việc mở rộng
   renderSubComponent?: (props: { row: Row<TData> }) => React.ReactElement;
   getRowCanExpand?: (row: Row<TData>) => boolean;
 }
@@ -48,14 +46,13 @@ export function ExpandableDataTable<TData, TValue>({
   pageCount,
   setCurrentPage,
   isLoading = false,
-  renderSubComponent, // Nhận prop
-  getRowCanExpand, // Nhận prop
+  renderSubComponent, 
+  getRowCanExpand, 
 }: ExpandableDataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // Kích hoạt tính năng mở rộng
     getRowCanExpand,
     getExpandedRowModel: getExpandedRowModel(),
   });
@@ -86,7 +83,6 @@ export function ExpandableDataTable<TData, TValue>({
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <React.Fragment key={row.id}>
-                  {/* Hàng chính */}
                   <TableRow
                     data-state={row.getIsSelected() && "selected"}
                   >
@@ -99,8 +95,6 @@ export function ExpandableDataTable<TData, TValue>({
                       </TableCell>
                     ))}
                   </TableRow>
-
-                  {/* Hàng chi tiết (khi mở rộng) */}
                   {row.getIsExpanded() && renderSubComponent && (
                     <TableRow>
                       <TableCell colSpan={columns.length}>
@@ -129,8 +123,7 @@ export function ExpandableDataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      
-      {/* Pagination (giữ nguyên) */}
+
       <Pagination className="mt-6">
         <PaginationContent>
           <PaginationItem>

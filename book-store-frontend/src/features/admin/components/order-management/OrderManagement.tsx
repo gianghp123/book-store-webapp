@@ -1,17 +1,12 @@
 "use client";
-// *** THAY ĐỔI IMPORT DATATABLE ***
 import { ExpandableDataTable } from "@/components/reusable/expandable-data-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-// *** XÓA IMPORT DIALOG ***
 import { Input } from "@/components/ui/input";
 import { Order } from "@/features/orders/dtos/response/order-response.dto";
 import { HttpError, useTable } from "@refinedev/core";
 import { DollarSign, Search, ShoppingBag } from "lucide-react";
-import { useState } from "react"; // Xóa 'useMemo' nếu không dùng
+import { useState } from "react";
 import { orderColumns } from "./columns";
-// *** THÊM IMPORT SUBROW ***
 import { OrderSubRow } from "./OrderSubRow";
 
 export function OrderManagement() {
@@ -27,7 +22,6 @@ export function OrderManagement() {
     pagination: {
       pageSize: 10,
     },
-    // *** THÊM META ĐỂ ĐẢM BẢO LOAD ĐÚNG (DỰ PHÒNG) ***
     meta: {
       relations: [
         "items",
@@ -40,12 +34,6 @@ export function OrderManagement() {
     },
   });
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // *** XÓA BỎ STATE VÀ HÀM CỦA DIALOG ***
-  // const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  // const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // const handleViewDetails = (order: Order) => { ... };
-  // const getStatusBadgeColor = (status: string) => { ... };
 
   return (
     <div className="p-6 space-y-6">
@@ -55,8 +43,6 @@ export function OrderManagement() {
           <p className="text-gray-600 mt-1">Track and manage customer orders</p>
         </div>
       </div>
-
-      {/* ... (Các thẻ thống kê Card giữ nguyên) ... */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -122,22 +108,18 @@ export function OrderManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* *** THAY THẾ DATATABLE BẰNG EXPANDABLEDATATABLE *** */}
           <ExpandableDataTable
-            columns={orderColumns} // columns.tsx đã được cập nhật
+            columns={orderColumns} 
             data={result.data}
             pageCount={pageCount}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             isLoading={tableQuery.isLoading}
-            // Thêm 2 props quan trọng này
             getRowCanExpand={() => true}
             renderSubComponent={({ row }) => <OrderSubRow row={row} />}
           />
         </CardContent>
       </Card>
-
-      {/* *** XÓA BỎ TOÀN BỘ COMPONENT <Dialog> CŨ *** */}
     </div>
   );
 }

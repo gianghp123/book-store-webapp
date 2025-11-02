@@ -1,32 +1,29 @@
-// Tệp cập nhật: src/features/orders/components/my-orders-columns.tsx
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Order } from "@/features/orders/dtos/response/order-response.dto";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button"; // <-- THÊM
-import { ChevronDown } from "lucide-react"; // <-- THÊM
-import { cn } from "@/lib/utils"; // <-- THÊM
+import { Button } from "@/components/ui/button"; 
+import { ChevronDown } from "lucide-react"; 
+import { cn } from "@/lib/utils";
 
-// Bỏ hàm bao bọc (không cần props onViewDetails nữa)
 export const myOrderColumns: ColumnDef<Order>[] = [
   {
     accessorKey: "id",
     header: "Order ID",
     cell: ({ row }) => (
-      // *** THAY ĐỔI Ô NÀY ***
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6" // Làm cho nút nhỏ hơn
-          onClick={row.getToggleExpandedHandler()} // Gọi hàm toggle của tanstack
+          className="h-6 w-6" 
+          onClick={row.getToggleExpandedHandler()} 
         >
           <ChevronDown
             className={cn(
               "h-4 w-4 transition-transform",
-              row.getIsExpanded() && "rotate-180" // Xoay mũi tên khi mở
+              row.getIsExpanded() && "rotate-180" 
             )}
           />
         </Button>
@@ -51,7 +48,6 @@ export const myOrderColumns: ColumnDef<Order>[] = [
   {
     accessorKey: "totalAmount",
     header: "Total Amount",
-    // Cập nhật để luôn hiển thị 2 số thập phân
     cell: ({ row }) => <div>${Number(row.original.totalAmount).toFixed(2)}</div>,
   },
   {

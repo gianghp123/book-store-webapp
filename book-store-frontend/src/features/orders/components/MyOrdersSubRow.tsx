@@ -29,29 +29,28 @@ export function MyOrdersSubRow({ row }: SubRowProps) {
   return (
     <div className="p-4 bg-muted/50 rounded-md">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-        {/* Cột thông tin chung */}
         <div className="space-y-3">
-          <h4 className="font-semibold">Chi tiết đơn hàng</h4>
+          <h4 className="font-semibold">Order details</h4>
           <div className="text-sm space-y-1">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Ngày đặt:</span>
+              <span className="text-muted-foreground">Order date:</span>
               <span className="font-medium">
                 {format(new Date(orderDate), "dd/MM/yyyy")}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Tổng tiền:</span>
+              <span className="text-muted-foreground">Total amount:</span>
               <span className="font-medium">${Number(totalAmount).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Trạng thái:</span>
+              <span className="text-muted-foreground">Status:</span>
               <Badge className={getStatusBadgeColor(status)}>{status}</Badge>
             </div>
           </div>
         </div>
 
         <div className="space-y-3 md:col-span-2">
-          <h4 className="font-semibold">Sách đã đặt ({items.length})</h4>
+          <h4 className="font-semibold">Books ordered ({items.length})</h4>
           <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
             {items.map((item) => (
               <div key={item.id} className="flex items-start gap-3">
@@ -73,8 +72,15 @@ export function MyOrdersSubRow({ row }: SubRowProps) {
                     </p>
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    Giá: ${Number(item.price).toFixed(2)}
+                    Price ${Number(item.price)}
                   </p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {item.product.authors?.map((a) => (
+                      <Badge key={a.id} variant="outline" className="text-xs">
+                        {a.name}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}

@@ -2,10 +2,8 @@
 
 import { ImageWithFallback } from "@/components/ImageWithFallBack";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
 import { Row } from "@tanstack/react-table";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CartSubRowProps {

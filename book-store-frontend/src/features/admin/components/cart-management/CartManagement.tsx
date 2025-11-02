@@ -1,19 +1,12 @@
 "use client";
-// *** THAY ĐỔI IMPORT DATATABLE ***
 import { ExpandableDataTable } from "@/components/reusable/expandable-data-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-// *** XÓA IMPORT DIALOG ***
 import { Input } from "@/components/ui/input";
 import { CartResponse } from "@/features/carts/dtos/response/cart-response.dto";
 import { HttpError, useTable } from "@refinedev/core";
 import { DollarSign, Search, ShoppingCart, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
-// *** THAY ĐỔI IMPORT COLUMNS ***
 import { cartColumns } from "./columns";
-// *** THÊM IMPORT SUBROW ***
 import { CartSubRow } from "./CartSubRow";
 
 export function CartManagement() {
@@ -42,12 +35,6 @@ export function CartManagement() {
   });
   const [searchTerm, setSearchTerm] = useState("");
 
-  // *** XÓA BỎ STATE VÀ HÀM CỦA DIALOG ***
-  // const [selectedCart, setSelectedCart] = useState<CartResponse | null>(null);
-  // const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // const handleViewDetails = (cart: CartResponse) => { ... };
-
-  // *** SỬA LẠI KHAI BÁO COLUMNS ***
   const columns = cartColumns;
 
   const cartStats = useMemo(() => {
@@ -69,11 +56,8 @@ export function CartManagement() {
     };
   }, [result?.data, result?.total]);
 
-  // (Hàm handleRemoveFromCart đã được chuyển vào CartSubRow)
-
   return (
     <div className="p-6 space-y-6">
-      {/* ... Phần Header và các Card Thống kê giữ nguyên ... */}
       <div className="flex items-center justify-between">
         <div>
           <h1>Cart Management</h1>
@@ -138,22 +122,18 @@ export function CartManagement() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* *** THAY THẾ DATATABLE BẰNG EXPANDABLEDATATABLE *** */}
           <ExpandableDataTable
-            columns={columns} // Dùng columns đã khai báo ở trên
+            columns={columns} 
             data={result.data}
             isLoading={tableQuery.isLoading}
             currentPage={currentPage}
             pageCount={pageCount}
             setCurrentPage={setCurrentPage}
-            // Thêm 2 props để kích hoạt tính năng mở rộng
             getRowCanExpand={() => true}
             renderSubComponent={({ row }) => <CartSubRow row={row} />}
           />
         </CardContent>
       </Card>
-
-      {/* *** XÓA BỎ TOÀN BỘ COMPONENT <Dialog> CŨ *** */}
     </div>
   );
 }

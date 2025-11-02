@@ -1,4 +1,3 @@
-// Tệp cập nhật: src/features/admin/components/order-management/columns.tsx
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
@@ -6,26 +5,25 @@ import { Order } from "@/features/orders/dtos/response/order-response.dto";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { ChevronDown } from "lucide-react"; // <-- THÊM IMPORT
-import { cn } from "@/lib/utils"; // <-- THÊM IMPORT
+import { ChevronDown } from "lucide-react"; 
+import { cn } from "@/lib/utils"; 
 
 export const orderColumns: ColumnDef<Order>[] = [
   {
     accessorKey: "id",
     header: "Order ID",
     cell: ({ row }) => (
-      // *** THAY ĐỔI Ô NÀY ***
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
           className="h-6 w-6"
-          onClick={row.getToggleExpandedHandler()} // Gọi hàm toggle
+          onClick={row.getToggleExpandedHandler()} 
         >
           <ChevronDown
             className={cn(
               "h-4 w-4 transition-transform",
-              row.getIsExpanded() && "rotate-180" // Xoay mũi tên
+              row.getIsExpanded() && "rotate-180"
             )}
           />
         </Button>
@@ -68,7 +66,7 @@ export const orderColumns: ColumnDef<Order>[] = [
 
       switch (status) {
         case "Completed":
-        case "Success": // Hỗ trợ cả "Success"
+        case "Success": 
           badgeColor = "bg-green-100 text-green-700";
           break;
         case "Processing":
@@ -85,5 +83,4 @@ export const orderColumns: ColumnDef<Order>[] = [
       return <Badge className={badgeColor}>{status}</Badge>;
     },
   },
-  // *** XÓA BỎ CỘT "ACTIONS" CŨ (NÚT CON MẮT) ***
 ];
