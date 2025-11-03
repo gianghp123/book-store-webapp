@@ -30,22 +30,30 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
+RUN mkdir -p /home/appuser/.cache/huggingface && \
+    chown -R appuser:appuser /home/appuser/.cache
+
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
+# Download dependencies as a separate step to take advantage of Docker's caching.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install torch --index-url https://download.pytorch.org/whl/cpu
+
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
     python -m pip install -r requirements.txt
 
+COPY --chown=appuser:appuser . .
+
 # Switch to the non-privileged user to run the application.
 USER appuser
 
-# Copy the source code into the container.
-COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 8000
+ENV HF_HOME=/home/appuser/.cache/huggingface
+
+RUN python models/download_models.py
 
 # Run the application.
-CMD gunicorn 'venv.lib.python3.12.site-packages.httpx._transports.wsgi' --bind=0.0.0.0:8000
+CMD sh -c "python main.py"

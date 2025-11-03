@@ -9,10 +9,9 @@ langchain
 langchain-openai
 grpcio
 grpcio-tools
+grpcio-health-checking
 redis
 einops
+pandas
 # Langsmith for pipeline tracing
 langsmith
-# optional for experiment and evaluation
-# pandas
-# matplotlib

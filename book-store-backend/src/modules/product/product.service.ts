@@ -286,10 +286,10 @@ export class ProductService implements OnModuleInit {
     // ✅ Step 6: Return paginated response
     return {
       pagination: {
-        total: 50,
+        total: retrievedBooks.bookIds.length,
         page,
         limit,
-        totalPages: Math.ceil(50 / limit),
+        totalPages: Math.ceil(retrievedBooks.bookIds.length / limit),
       },
       data: productDtos,
     };

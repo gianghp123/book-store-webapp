@@ -32,3 +32,13 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+venv/
+ENV/
+env/
+.venv/
+.env/
+.env.prod
+data_processing
+evaluations
+experiments

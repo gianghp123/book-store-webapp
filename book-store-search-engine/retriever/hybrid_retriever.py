@@ -10,11 +10,25 @@ import logging
 from redis import Redis
 import json
 import numpy as np
+import time
 from langsmith import traceable
 from constants.constants import (
     DENSE_FIELD,
     SPARSE_FIELD,
+    BOOK_COLLECTION_NAME
 )
+# Silence all transformers logs (including dynamic modules)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("transformers_modules").setLevel(logging.ERROR)
+
+# Silence sentence-transformers warnings
+logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers.cross_encoder").setLevel(logging.ERROR)
+logging.getLogger("sentence_transformers.cross_encoder.util").setLevel(logging.ERROR)
+
+# Silence qdrant client warnings (optional)
+logging.getLogger("qdrant_client").setLevel(logging.ERROR)
+
 
 dotenv.load_dotenv()
 
@@ -25,10 +39,10 @@ class HybridRetriever:
         qdrant_client: QdrantClient,
         redis_client: Redis,
         query_processor: BookFilterExtractor, 
-        collection_name: str = "book_collection",
+        collection_name: str = BOOK_COLLECTION_NAME,
         dense_model: str = "jina-embeddings-v3",
         sparse_model: str = "prithivida/Splade_PP_en_v1",
-        reranker_model: str = "jinaai/jina-reranker-v2-base-multilingual",
+        reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2", #"jinaai/jina-reranker-v2-base-multilingual",
         task: str = "text-matching",
     ):
         """Initialize the hybrid retriever with dense, sparse, and reranker models.
@@ -63,7 +77,6 @@ class HybridRetriever:
 
         self.reranker = CrossEncoder(
             reranker_model,
-            automodel_args={"torch_dtype": "auto"},
             trust_remote_code=True,
         )
     
@@ -273,7 +286,7 @@ class HybridRetriever:
     def search_with_filter(self, query: str, top_n: int = 10, **kwargs) -> List[Dict[str, Any]]:
         """Complete pipeline: hybrid retrieval + reranking with filter and query rewriting."""
         logging.info('Start search with filter.')
-
+        start_time = time.time()
         # Cache for final search results
         cache_key = f"{query}_{top_n}_{json.dumps(kwargs, sort_keys=True)}"
         cached_result = self.redis_client.get(cache_key)
@@ -305,6 +318,8 @@ class HybridRetriever:
         self.redis_client.setex(cache_key, 60 * 60, json.dumps(result))
 
         logging.info('End search with filter.')
+        end_time = time.time()
+        logging.info(f"Search with filter took {end_time - start_time:.2f} seconds.")
         return result
 
 

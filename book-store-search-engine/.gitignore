@@ -107,6 +107,7 @@ env/
 #env file
 
 .env
+.env.prod
 *.json
 *.npy
 *.csv
