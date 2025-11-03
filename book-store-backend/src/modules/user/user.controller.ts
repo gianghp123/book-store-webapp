@@ -1,50 +1,24 @@
-import {
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Query,
-  Param,
-  Request,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, Query, Param, Request } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { Roles } from 'src/core/decorators/role.decorator';
 import { Role } from 'src/core/enums/role.enum';
 import { UserService } from './user.service';
 import { UserResponseDto, PaginatedUsersDto } from './dto/user-response.dto';
+import { Public } from 'src/core/decorators/public.decorator';
 
 @ApiBearerAuth()
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(Role.ADMIN)
+  // @Roles(Role.ADMIN)
+  @Public()
   @ApiOperation({ summary: 'Get all users (Admin only)' })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Page number',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Limit per page',
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    type: String,
-    description: 'Search by full name',
-  })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limit per page' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search by full name' })
   async getAllUsers(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
@@ -53,19 +27,21 @@ export class UserController {
     return await this.userService.findAll(page, limit, search);
   }
 
-  @Get('me')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get current user' })
-  async getMyUser(@Request() req): Promise<UserResponseDto> {
-    return await this.userService.findOne(req.user.id);
-  }
-
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Get user by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  async getUserById(@Param('id') id: string): Promise<UserResponseDto> {
+  async getUserById(
+    @Param('id') id: string,
+  ): Promise<UserResponseDto> {
     return await this.userService.findOne(id);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get current user' })
+  async getMyUser(@Request() req): Promise<UserResponseDto> {
+    return await this.userService.findOne(req.user.id);
   }
 }

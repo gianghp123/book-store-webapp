@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { Product } from '../product/entities/product.entity';
 import { User } from '../user/entities/user.entity';
 import { AddToCartDto } from './dto/add-to-cart.dto';
-import { CartItemResponseDto, CartResponseDto } from './dto/cart-response.dto';
+import { CartItemResponseDto, CartResponseDto, CartItemResponseDtoWithProduct } from './dto/cart-response.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { CartItem } from './entities/cart-item.entity';
 import { Cart } from './entities/cart.entity';
@@ -24,7 +24,7 @@ export class CartService {
     private productRepository: Repository<Product>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async addToCart(
     userId: string,
@@ -75,21 +75,14 @@ export class CartService {
   async getCartByUser(userId: string): Promise<CartResponseDto> {
     const cart = await this.cartRepository.findOne({
       where: { user: { id: userId } },
-      relations: [
-        'items',
-        'items.product',
-        'items.product.book',
-        'items.product.book.categories',
-        'items.product.book.authors',
-        'user',
-      ],
+      relations: ['items', 'items.product', 'items.product.book', 'user'],
     });
 
     if (!cart) {
       throw new NotFoundException('Cart not found');
     }
 
-    cart.items.forEach((item) => {
+    cart.items.forEach(item => {
       if (item.product?.book) {
         (item.product.book as any).fileUrl = undefined;
       }
@@ -98,22 +91,12 @@ export class CartService {
     return CartResponseDto.fromEntity(cart);
   }
 
-  async getCartItemCountByUser(userId: string): Promise<number> {
-    return this.cartItemRepository.count({
-      where: {
-        cart: {
-          user: { id: userId },
-        },
-      },
-    });
-  }
-
-  async getCarts(): Promise<CartResponseDto[]> {
-    const cart = await this.cartRepository.find({
-      relations: ['items', 'items.product', 'user','items.product.book','items.product.book.categories','items.product.book.authors'],
+  async getCart(): Promise<CartResponseDto> {
+    const cart = await this.cartItemRepository.find({
+      relations: ['product', 'product.book'],
     });
 
-    return CartResponseDto.fromEntities(cart);
+    return CartResponseDto.fromEntity(cart);
   }
 
   async removeCartItem(
@@ -154,6 +137,7 @@ export class CartService {
     }
 
     if (cart.items && cart.items.length > 0) {
+      
       await this.cartItemRepository.delete({ cart: { id: cart.id } });
     }
 

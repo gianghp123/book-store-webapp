@@ -43,7 +43,9 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 # Copy the rest of the source files into the image.
 COPY . .
 # Run the build script.
-RUN npm run build && npm run copy:seeds
+RUN npm run build
+
+RUN npm run migration:run
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
@@ -69,4 +71,4 @@ COPY --from=build /usr/src/app/dist ./dist
 EXPOSE 4000
 
 # Run the application.
-CMD npx typeorm migration:run -d dist/database/data-source.js && node dist/main.js
+CMD npm run start
