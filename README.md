@@ -80,6 +80,12 @@ The search engine is a Hybrid search engine for book stores, powered by Qdrant f
 - Implements Cross-Encoder re-ranking for better result relevance
 - Communicates with the backend via gRPC
 
+### Example Search Query
+
+Try searching for: "Classic children's stories featuring Winnie-the-Pooh and friends"
+
+**Note:** Search time may vary depending on the host machine specifications and network connection.
+
 ## Prerequisites
 
 - Docker and Docker Compose v2+
@@ -88,7 +94,14 @@ The search engine is a Hybrid search engine for book stores, powered by Qdrant f
 
 ## Setting Up the Application
 
-### 1. Download Seed Files
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/gianghp123/book-store-webapp.git
+cd book-store-webapp
+```
+
+### 2. Download Seed Files
 
 The application requires seed data to function properly. You'll need to download the following file:
 
@@ -101,6 +114,8 @@ Extract it as follows:
 ```bash
 # After downloading the file
 unzip book-store-seeds.zip
+
+mkdir book-store-backend/src/database/seeds
 
 # Copy the content to the appropriate directories
 cp -r book-store-seeds/backend_seeds/* book-store-backend/src/database/seeds/

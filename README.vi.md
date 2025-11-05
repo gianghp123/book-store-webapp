@@ -75,6 +75,12 @@ Công cụ tìm kiếm là công cụ tìm kiếm lai cho các hiệu sách, đ�
 - Triển khai xếp hạng lại bằng Cross-Encoder để có kết quả liên quan tốt hơn
 - Giao tiếp với backend qua gRPC
 
+### Ví dụ
+
+Ví dụ tìm kiếm thông minh với truy vấn: "Classic children's stories featuring Winnie-the-Pooh and friends"
+
+**Note:** Thời gian tìm kiếm có thể phụ thuộc vào thông số máy và kết nối mạng.
+
 ## Yêu cầu Hệ thống
 
 - Docker và Docker Compose v2+
@@ -83,7 +89,14 @@ Công cụ tìm kiếm là công cụ tìm kiếm lai cho các hiệu sách, đ�
 
 ## Thiết lập Ứng dụng
 
-### 1. Tải về các tệp Dữ liệu Mẫu
+### 1. Tải repo
+
+```bash
+git clone https://github.com/gianghp123/book-store-webapp.git
+cd book-store-webapp
+```
+
+### 2. Tải về các tệp Dữ liệu Mẫu
 
 Ứng dụng yêu cầu dữ liệu mẫu để hoạt động đúng. Bạn sẽ cần tải về tệp sau:
 
@@ -96,6 +109,8 @@ Giải nén như sau:
 ```bash
 # Sau khi tải về tệp
 unzip book-store-seeds.zip
+
+mkdir book-store-backend/src/database/seeds
 
 # Sao chép nội dung đến các thư mục thích hợp
 cp -r book-store-seeds/backend_seeds/* book-store-backend/src/database/seeds/
@@ -115,7 +130,7 @@ Cấu trúc thư mục `book-store-seeds/` chứa:
 **Lưu ý:** Bạn có thể sử dụng các tệp môi trường được cung cấp trực tiếp vì chúng chứa các khóa API và cấu hình dùng thử miễn phí và hoạt động ngay lập tức.
 
 
-### 2. Xây dựng và chạy với Docker Compose
+### 3. Xây dựng và chạy với Docker Compose
 
 Sau khi các tệp mẫu được đặt vào đúng vị trí và các biến môi trường được cấu hình, bạn có thể bắt đầu toàn bộ ứng dụng:
 
