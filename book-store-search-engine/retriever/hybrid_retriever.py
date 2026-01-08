@@ -17,6 +17,9 @@ from constants.constants import (
     SPARSE_FIELD,
     BOOK_COLLECTION_NAME
 )
+# from transformers import pipeline, AutoTokenizer
+# import transformers
+
 # Silence all transformers logs (including dynamic modules)
 logging.getLogger("transformers").setLevel(logging.ERROR)
 logging.getLogger("transformers_modules").setLevel(logging.ERROR)
@@ -43,6 +46,7 @@ class HybridRetriever:
         dense_model: str = "jina-embeddings-v3",
         sparse_model: str = "prithivida/Splade_PP_en_v1",
         reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2", #"jinaai/jina-reranker-v2-base-multilingual",
+        # summarizer_model: str = "pszemraj/led-large-book-summary"
         task: str = "text-matching",
     ):
         """Initialize the hybrid retriever with dense, sparse, and reranker models.
@@ -69,7 +73,8 @@ class HybridRetriever:
         self.task = task
 
         self.sparse_model = SparseTextEmbedding(model_name=sparse_model)
-
+        # self.tokenizer = AutoTokenizer.from_pretrained(summarizer_model)
+        # self.summarizer = pipeline("summarization", model=summarizer_model, device=gpu_id)
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
@@ -322,8 +327,50 @@ class HybridRetriever:
         logging.info(f"Search with filter took {end_time - start_time:.2f} seconds.")
         return result
 
+    # def summarize_description(self, description: str):
+    #     outputs = self.summarizer(
+    #             description,
+    #             min_length=16,
+    #             max_length=200,
+    #             no_repeat_ngram_size=3,
+    #             encoder_no_repeat_ngram_size=3,
+    #             repetition_penalty=3.5,
+    #             num_beams=4,
+    #             early_stopping=True,
+    #             truncation=True,
+    #         )
+    #     return outputs[0]['summary_text']
 
-
-
+    # def add_book(self, book: Dict[str, Any]):
+    #     if not book.get('description') or not book.get('title') or not book.get('book_id'):
+    #         return
+    #     book['description_summary'] = self.summarize_description(book['description'])
+    #     embed_string = self._format_book(book)
+    #     emb = self.embed_hybrid(embed_string)
+    #     point = models.PointStruct(
+    #         id=str(book["book_id"]),
+    #         vector={
+    #             DENSE_FIELD: emb["dense"],
+    #             SPARSE_FIELD: models.SparseVector(
+    #                 indices=emb["sparse"]["indices"],
+    #                 values=emb["sparse"]["values"],
+    #             ),
+    #         },
+    #         payload={
+    #             "book_id": int(book["book_id"]),
+    #             "title": str(book["title"]),
+    #             "description_summary": str(book["description_summary"]),
+    #             "price": float(book["price"]) if book["price"] is not None else None,
+    #             "rating": float(book["rating"]) if book["rating"] is not None else None,
+    #             "rating_count": int(book["rating_count"]) if book["rating_count"] is not None else None,
+    #             "authors": book["authors"] if book["authors"] is not None else None,
+    #             "categories": book["categories"] if book["categories"] is not None else None,
+    #         },
+    #     )
+    #     self.client.upsert_points(
+    #         collection_name=self.collection_name,
+    #         points=[point],
+    #     )
+    #     return point.id
 
         
